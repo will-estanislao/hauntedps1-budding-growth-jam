@@ -4,6 +4,10 @@ using UnityEngine;
 
 public class ItemsList
 {
+    public struct Food
+    {
+        public int Fertilizer;
+    }
     // 
     public enum FoodItems: int
     {

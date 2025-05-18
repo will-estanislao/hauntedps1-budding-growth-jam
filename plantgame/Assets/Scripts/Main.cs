@@ -16,7 +16,7 @@ public class Main : MonoBehaviour
     public delegate void OnDespawn();
     public static OnDespawn despawnObject;
 
-    public delegate void ObjectSpawn(string name);
+    public delegate void ObjectSpawn(string name, int itemType);
     public static ObjectSpawn spawnObject;
 
     /*
@@ -159,11 +159,13 @@ public class Main : MonoBehaviour
         gameUI.OnUIUpdate(currentPlant.GetComponent<PlantCreature>().PlantInfo());
     }
 
-    private void SpawnObject(string name)
+    private void SpawnObject(string name, int itemType)
     {
         GameObject objToSpawn = LoadPrefabFromFile(name);
         Vector3 spawnPos = new Vector3(4, 3, 0);
         Instantiate(objToSpawn, spawnPos, objToSpawn.transform.rotation);
+
+        // If
 
     }
 

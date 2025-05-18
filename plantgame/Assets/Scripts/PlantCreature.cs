@@ -15,11 +15,11 @@ public class PlantCreature : MonoBehaviour
     public static PetAction petPlant;
 
     // Plant Properties
-    [SerializeField, Range(0,100)]
+    [SerializeField, Range(0, 100)]
     float water = 100.0f;
-    [SerializeField, Range(0,100)]
+    [SerializeField, Range(0, 100)]
     float hunger = 5.0f;
-    [SerializeField, Range(0,100)]
+    [SerializeField, Range(0, 100)]
     float plantLight = 100.0f;
     [SerializeField, Range(0, 100)]
     float affection = 100.0f;
@@ -36,7 +36,11 @@ public class PlantCreature : MonoBehaviour
 
     public bool petMode = false;
 
+    PlantAnimation animations;
+    int reactions;
 
+    private List<ItemsList.FoodItems> favFoods;
+    private List<ItemsList.FoodItems> hateFoods;
 
     // Stat Properties
     float waterCurve = 1.25f;
@@ -48,19 +52,31 @@ public class PlantCreature : MonoBehaviour
     // Animation vars
     private Animator animator;
 
+    // Hashes for animation
+    int isHappyHash;
+    int isSadHash;
+    int isIdleHash;
+
     private void Awake()
     {
-        animator = GetComponent<Animator>();
+        favFoods = new List<ItemsList.FoodItems>() { ItemsList.FoodItems.Steak };
+        hateFoods = new List<ItemsList.FoodItems>() { ItemsList.FoodItems.MealWorm };
         petPlant += PetPlant;
+
+        animator = GetComponent<Animator>();
+
+        isHappyHash = Animator.StringToHash("Stage2Happy");
+        isSadHash = Animator.StringToHash("Stage2Sad");
+        isIdleHash = Animator.StringToHash("Stage2Idle");
     }
 
     public void OnUpdate()
     {
-        // Do appropriate animation
 
+        // Do appropriate animation
         // Update plant status
         StatusChange();
-        
+
     }
 
     #region Plant Methods
@@ -71,24 +87,34 @@ public class PlantCreature : MonoBehaviour
 
     public void SwitchMode()
     {
-        if(petMode)
+        if (petMode)
         {
             petMode = false;
-        } else
+        }
+        else
         {
             petMode = true;
         }
     }
 
     // Feed Plant
-    private void FeedPlant(GameObject food)
+    private void FeedPlant(FoodChoices food)
     {
-        int fooditem = (int) ItemsList.FoodItems.Fertilizer;
+
         // Takes food obj - checks what type of food & extract value
         // depending on food, hunger values will go up
-        hunger += fooditem;
-
-        // If food is favourite, 
+        hunger += (int)food.foodType;
+        Debug.Log(food.foodType.ToString());
+        // If food is fav
+        if(favFoods.Contains(food.foodType))
+        {
+            animator.SetTrigger("isHappy");
+        }
+        else if(hateFoods.Contains(food.foodType))
+        {
+            animator.SetTrigger("isSad");
+        }
+        
 
         Debug.Log("Plant Hunger Level:" + hunger);
     }
@@ -122,7 +148,7 @@ public class PlantCreature : MonoBehaviour
         //Debug.Log(plantInformation);
 
         return plantInformation;
-        
+
     }
 
     private void StatusChange()
@@ -136,35 +162,34 @@ public class PlantCreature : MonoBehaviour
 
 
 
-        if(hunger >= 75.0f && water >= 75.0f && plantLight >= 75.0f && affection >= 75.0f)
+        if (hunger >= 75.0f && water >= 75.0f && plantLight >= 75.0f && affection >= 75.0f)
         {
             plantStatus = ItemsList.PlantStatus.Happy;
         }
 
-        if(affection <= 40.0f)
+        if (affection <= 40.0f)
         {
             plantStatus = ItemsList.PlantStatus.Sad;
         }
 
-        if(water >= 40.0f && water <= 50.0f)
+        if (water >= 40.0f && water <= 50.0f)
         {
             plantStatus = ItemsList.PlantStatus.Dry;
         }
 
-        if(water < 40.0f && hunger < 40.0f)
+        if (water < 40.0f && hunger < 40.0f)
         {
             plantStatus = ItemsList.PlantStatus.Wilting;
         }
 
-        if(hunger < 25.0f && water < 25.0f && plantLight < 25.0f && affection < 25.0f)
+        if (hunger < 25.0f && water < 25.0f && plantLight < 25.0f && affection < 25.0f)
         {
             plantStatus = ItemsList.PlantStatus.Dying;
         }
 
-        
-    }
 
-    // Method to handle pet,
+    }
+    #endregion
 
     /*
      * Check if anything has gone inside plant collision
@@ -174,10 +199,11 @@ public class PlantCreature : MonoBehaviour
      */
     private void OnCollisionEnter(Collision collision)
     {
-        if(collision.gameObject.GetComponent<FoodChoices>().itemType == 1)
+        FoodChoices foodItem = collision.gameObject.GetComponent<FoodChoices>();
+        if (foodItem.itemType == 1)
         {
-            FeedPlant(collision.gameObject);
-            // Might need timer to delay to allow animation to play
+            FeedPlant(foodItem);
+
             Destroy(collision.gameObject);
 
             // At the end of doing collision things, Trigger ui reset - event?
@@ -194,13 +220,4 @@ public class PlantCreature : MonoBehaviour
             Debug.Log("I'm getting watered!");
         }
     }
-
-    #endregion
-
-    #region Animation
-    public void PlantAnimation()
-    {
-        animator.Play("Stage2Happy");
-    }
-    #endregion
 }

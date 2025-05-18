@@ -10,6 +10,8 @@ public class FoodChoices : MonoBehaviour
     // Item type - To pass thru to plant to check
     [SerializeField]
     public int itemType;
+    [SerializeField]
+    public ItemsList.FoodItems foodType;
 
     Rigidbody objRigidbody;
 

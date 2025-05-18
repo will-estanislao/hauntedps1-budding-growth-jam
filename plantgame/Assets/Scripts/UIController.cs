@@ -85,6 +85,11 @@ public class UIController : MonoBehaviour
 
     }
 
+    private void OnEnable()
+    {
+        
+    }
+
     private void OnDisable()
     {
         _button.UnregisterCallback<ClickEvent>(OnFeedClick);
@@ -132,7 +137,7 @@ public class UIController : MonoBehaviour
     {
         Debug.Log("Target:" + evnt.currentTarget);
 
-        Main.spawnObject("Meat");
+        Main.spawnObject?.Invoke("Meat", 1);
 
         foodMenu.visible = false;
 
@@ -145,7 +150,7 @@ public class UIController : MonoBehaviour
         exitButton.visible = true;
 
         // Spawn item in
-        Main.spawnObject("Water");
+        //Main.spawnObject("Water");
 
     }
 
@@ -169,6 +174,7 @@ public class UIController : MonoBehaviour
     public void ResetUI()
     {
         _document.rootVisualElement.Q(name: "main").visible = true;
+        exitButton.visible = false;
 
         _document.rootVisualElement.Q(name: "FoodMenu").visible = false;
     }
