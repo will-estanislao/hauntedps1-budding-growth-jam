@@ -29,6 +29,8 @@ public class UIController : MonoBehaviour
     private Button petBtn;
     private Button exitButton;
     private Button lowLightBtn;
+    private Button medLightBtn;
+    private Button highLightBtn;
 
     [SerializeField]
     public Texture2D mouseCursor;
@@ -65,6 +67,8 @@ public class UIController : MonoBehaviour
         petBtn = mainMenu.Q<Button>("petButton");
 
         lowLightBtn = lightMenu.Q<Button>("Low");
+        medLightBtn = lightMenu.Q<Button>("Med");
+        highLightBtn = lightMenu.Q<Button>("High");
 
         // Hide foodmenu until feed is clicked
         subMenu.visible = false;
@@ -90,7 +94,9 @@ public class UIController : MonoBehaviour
         _careMenuButtons[1].RegisterCallback<ClickEvent>(OnWatering);
         _careMenuButtons[3].RegisterCallback<ClickEvent>(OnLight);
 
-        lowLightBtn.RegisterCallback<ClickEvent>(SetLight);
+        lowLightBtn.RegisterCallback<ClickEvent, ItemsList.LightMode>(SetLight, ItemsList.LightMode.Low);
+        medLightBtn.RegisterCallback<ClickEvent, ItemsList.LightMode>(SetLight, ItemsList.LightMode.Medium);
+        highLightBtn.RegisterCallback<ClickEvent, ItemsList.LightMode>(SetLight, ItemsList.LightMode.High);
 
     }
 
@@ -117,6 +123,10 @@ public class UIController : MonoBehaviour
         }
 
         _careMenuButtons[3].UnregisterCallback<ClickEvent>(OnLight);
+
+        lowLightBtn.UnregisterCallback<ClickEvent, ItemsList.LightMode>(SetLight);
+        medLightBtn.UnregisterCallback<ClickEvent, ItemsList.LightMode>(SetLight);
+        highLightBtn.UnregisterCallback<ClickEvent, ItemsList.LightMode>(SetLight);
     }
 
     private void OnExit(ClickEvent evnt)
@@ -175,12 +185,16 @@ public class UIController : MonoBehaviour
         // Bring up a light settings menu
         // Low, Mid, High
         // These just affect stat- specifically water and food increase/decrease
+        _document.rootVisualElement.Q(name: "main").visible = false;
+        exitButton.visible = true;
         lightMenu.visible = true;
     }
 
-    private void SetLight(ClickEvent evnt)
+    private void SetLight(ClickEvent evnt, ItemsList.LightMode lightChoice)
     {
+        Main.lightState?.Invoke(lightChoice);
 
+        lightMenu.visible = false;
     }
 
     private void OnPet(ClickEvent evnt)
