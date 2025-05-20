@@ -16,13 +16,11 @@ public class PlantCreature : MonoBehaviour
 
     // Plant Properties
     [SerializeField, Range(0, 100)]
-    float water = 100.0f;
+    float water = 25.0f;
     [SerializeField, Range(0, 100)]
-    float hunger = 5.0f;
+    float hunger = 25.0f;
     [SerializeField, Range(0, 100)]
-    float plantLight = 100.0f;
-    [SerializeField, Range(0, 100)]
-    float affection = 100.0f;
+    float affection = 25.0f;
     // Accessories - Array that holds accessories
     // Will need to create some obj, 
     // Plant Type
@@ -45,7 +43,9 @@ public class PlantCreature : MonoBehaviour
     // Stat Properties
     float waterCurve = 1.25f;
     float affectCurve = 2.0f;
-    float lightAdditon;
+    float lightAdditon = 1.0f;
+
+    ItemsList.LightMode currentMode;
 
 
     // State? - In feed mode/Water mode/Light mode - disable controls to only focus on this so those modes can be the same
@@ -60,6 +60,7 @@ public class PlantCreature : MonoBehaviour
 
     private void Awake()
     {
+        currentMode = ItemsList.LightMode.Medium;
         favFoods = new List<ItemsList.FoodItems>() { ItemsList.FoodItems.Steak };
         hateFoods = new List<ItemsList.FoodItems>() { ItemsList.FoodItems.MealWorm };
         petPlant += PetPlant;
@@ -73,7 +74,7 @@ public class PlantCreature : MonoBehaviour
 
     public void OnUpdate()
     {
-
+        
         // Do appropriate animation
         // Update plant status
         StatusChange();
@@ -98,6 +99,13 @@ public class PlantCreature : MonoBehaviour
         }
     }
 
+    public void SwitchLight(ItemsList.LightMode newMode)
+    {
+        currentMode = newMode;
+        SetLight();
+        Main.resetMainUI?.Invoke();
+    }
+
     // Feed Plant
     private void FeedPlant(ItemChoices food)
     {
@@ -114,10 +122,12 @@ public class PlantCreature : MonoBehaviour
         else if(hateFoods.Contains(food.foodType))
         {
             animator.SetTrigger("isSad");
-            foodCalc = (int)food.foodType * 0.25f;
+            foodCalc = (int)food.foodType * 0.75f;
         }
 
-        hunger += foodCalc;
+        hunger += foodCalc * lightAdditon;
+
+        hunger = Mathf.Clamp(hunger, 0, 100);
 
         Debug.Log("Plant Hunger Level:" + hunger);
     }
@@ -125,8 +135,8 @@ public class PlantCreature : MonoBehaviour
     // Water Plant
     private void WaterPlant()
     {
-        water += Mathf.Clamp(Mathf.Exp(waterCurve), 0.0f, 2.5f) * Time.deltaTime;
-
+        water += Mathf.Clamp(Mathf.Exp(waterCurve), 0.0f, 2.5f) * lightAdditon * Time.deltaTime;
+        water = Mathf.Clamp(water, 0, 100);
         Debug.Log("Water Increase: " + water);
     }
 
@@ -134,13 +144,25 @@ public class PlantCreature : MonoBehaviour
     private void SetLight()
     {
         // Set the light
-
+        if(currentMode == ItemsList.LightMode.Low)
+        {
+            lightAdditon = 0.50f;
+        }
+        else if (currentMode == ItemsList.LightMode.Medium)
+        {
+            lightAdditon = 1.0f;
+        }
+        else if(currentMode == ItemsList.LightMode.High)
+        {
+            lightAdditon = 1.25f;
+        }
     }
 
     // Give plant affection
     private void PetPlant()
     {
         affection += Mathf.Clamp(Mathf.Exp(affectCurve), 0.0f, 2.5f) * Time.deltaTime;
+        affection = Mathf.Clamp(affection, 0, 100);
 
         Debug.Log("Plant pet!");
     }
@@ -151,7 +173,7 @@ public class PlantCreature : MonoBehaviour
         string plantInformation = string.Format("Name: {0}\nHunger:{1}\nWater:{2}\n" +
             "Light:{3}\nAffection:{4}\nStatus:{5}\nPlant Type:{6}\nPlant Stage:{7}\n" +
             "Pet Mode:{8}",
-            plantName, hunger, water, plantLight, affection, plantStatus, plantType, plantStage, petMode);
+            plantName, hunger, water, currentMode, affection, plantStatus, plantType, plantStage, petMode);
 
         //Debug.Log(plantInformation);
 
@@ -168,9 +190,7 @@ public class PlantCreature : MonoBehaviour
         // Wilting - Water Stat in <40%
         // Dying - All stats are below 25%
 
-
-
-        if (hunger >= 75.0f && water >= 75.0f && plantLight >= 75.0f && affection >= 75.0f)
+        if (hunger >= 75.0f && water >= 75.0f && affection >= 75.0f)
         {
             plantStatus = ItemsList.PlantStatus.Happy;
         }
@@ -190,7 +210,7 @@ public class PlantCreature : MonoBehaviour
             plantStatus = ItemsList.PlantStatus.Wilting;
         }
 
-        if (hunger < 25.0f && water < 25.0f && plantLight < 25.0f && affection < 25.0f)
+        if (hunger < 25.0f && water < 25.0f && affection < 25.0f)
         {
             plantStatus = ItemsList.PlantStatus.Dying;
         }
