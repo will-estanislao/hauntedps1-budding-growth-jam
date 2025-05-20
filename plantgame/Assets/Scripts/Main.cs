@@ -13,6 +13,9 @@ public class Main : MonoBehaviour
     public delegate void ChangePlantState();
     public static ChangePlantState switchState;
 
+    public delegate void ChangeLightState(ItemsList.LightMode light);
+    public static ChangeLightState lightState;
+
     public delegate void OnDespawn();
     public static OnDespawn despawnObject;
 
@@ -77,6 +80,7 @@ public class Main : MonoBehaviour
         despawnObject += DespawnObject;
 
         switchState += ChangeMode;
+        lightState += ChangeLight;
 
         //createCursor += InstantiateHand;
 
@@ -136,6 +140,11 @@ public class Main : MonoBehaviour
     {
         currentPlant.GetComponent<PlantCreature>().SwitchMode();
         plantMode = currentPlant.GetComponent<PlantCreature>().petMode;
+    }
+
+    public void ChangeLight(ItemsList.LightMode newMode)
+    {
+        currentPlant.GetComponent<PlantCreature>().SwitchLight(newMode);
     }
 
     public void ResetUI()
