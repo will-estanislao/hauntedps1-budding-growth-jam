@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
+using UnityEngine.EventSystems;
 
 public class UIController : MonoBehaviour
 {
@@ -16,12 +17,18 @@ public class UIController : MonoBehaviour
 
     // Subscribing multiple buttons to events
     private List<Button> _careMenuButtons = new List<Button>();
-    private VisualElement foodMenu;
+    private VisualElement subMenu;
     private VisualElement debugMenu;
     private VisualElement mainMenu;
+
+    private VisualElement foodMenu;
+    private VisualElement lightMenu;
+
     private Button meatButton;
+    private Button wormBtn;
     private Button petBtn;
     private Button exitButton;
+    private Button lowLightBtn;
 
     [SerializeField]
     public Texture2D mouseCursor;
@@ -43,17 +50,24 @@ public class UIController : MonoBehaviour
 
         exitButton = _document.rootVisualElement.Q<Button>(name: "exitBtn");
 
-        foodMenu = _document.rootVisualElement.Q(name: "FoodMenu");
+        subMenu = _document.rootVisualElement.Q(name: "SubMenu");
         mainMenu = _document.rootVisualElement.Q(name: "main");
         debugMenu = _document.rootVisualElement.Q(name: "DebugUI");
-       
-        meatButton = foodMenu.Q<Button>("meatOption");
-        meatButton.RegisterCallback<ClickEvent>(SpawnFood);
+
+        foodMenu = subMenu.Q<VisualElement>(name: "FoodMenu");
+        lightMenu = subMenu.Q<VisualElement>(name: "LightMenu");
+
+        meatButton = foodMenu.Q<Button>("Steak");
+        wormBtn = foodMenu.Q<Button>("Mealworm");
+        meatButton.RegisterCallback<ClickEvent, ItemsList.FoodItems>(SpawnFood, ItemsList.FoodItems.Steak);
+        wormBtn.RegisterCallback<ClickEvent, ItemsList.FoodItems>(SpawnFood, ItemsList.FoodItems.MealWorm);
 
         petBtn = mainMenu.Q<Button>("petButton");
 
+        lowLightBtn = lightMenu.Q<Button>("Low");
+
         // Hide foodmenu until feed is clicked
-        foodMenu.visible = false;
+        subMenu.visible = false;
         exitButton.visible = false;
 
         // Get the heirarchy of the ui element within ex: trying to get button
@@ -66,14 +80,17 @@ public class UIController : MonoBehaviour
 
         petBtn.RegisterCallback<ClickEvent>(OnPet);
 
-        _careMenuButtons = _document.rootVisualElement.Query<Button>(className:"care-menu-btn").ToList();
-        for(int i = 0; i < _careMenuButtons.Count; i++)
+        _careMenuButtons = _document.rootVisualElement.Query<Button>(className: "care-menu-btn").ToList();
+        for (int i = 0; i < _careMenuButtons.Count; i++)
         {
             _careMenuButtons[i].RegisterCallback<ClickEvent>(OnAllButtonsClicked);
             Debug.Log(_careMenuButtons[i].name);
         }
 
         _careMenuButtons[1].RegisterCallback<ClickEvent>(OnWatering);
+        _careMenuButtons[3].RegisterCallback<ClickEvent>(OnLight);
+
+        lowLightBtn.RegisterCallback<ClickEvent>(SetLight);
 
     }
 
@@ -85,14 +102,11 @@ public class UIController : MonoBehaviour
 
     }
 
-    private void OnEnable()
-    {
-        
-    }
-
     private void OnDisable()
     {
         _button.UnregisterCallback<ClickEvent>(OnFeedClick);
+        //meatButton.UnregisterCallback<ClickEvent, ItemsList>(SpawnFood);
+        //wormBtn.UnregisterCallback<ClickEvent>(SpawnFood);
 
         exitButton.UnregisterCallback<ClickEvent>(OnExit);
         petBtn.UnregisterCallback<ClickEvent>(OnPet);
@@ -101,6 +115,8 @@ public class UIController : MonoBehaviour
         {
             _careMenuButtons[i].UnregisterCallback<ClickEvent>(OnAllButtonsClicked);
         }
+
+        _careMenuButtons[3].UnregisterCallback<ClickEvent>(OnLight);
     }
 
     private void OnExit(ClickEvent evnt)
@@ -108,8 +124,8 @@ public class UIController : MonoBehaviour
         Debug.Log("Exit Button was pressed");
         // Despawn Object
         Main.despawnObject?.Invoke();
-        
-        if(Main.plantMode)
+
+        if (Main.plantMode)
         {
             Main.switchState?.Invoke();
         }
@@ -133,11 +149,11 @@ public class UIController : MonoBehaviour
 
     }
 
-    public void SpawnFood(ClickEvent evnt)
+    public void SpawnFood(ClickEvent evnt, ItemsList.FoodItems food)
     {
         Debug.Log("Target:" + evnt.currentTarget);
 
-        Main.spawnObject?.Invoke("Meat", 1);
+        Main.spawnObject?.Invoke(1, food);
 
         foodMenu.visible = false;
 
@@ -150,7 +166,20 @@ public class UIController : MonoBehaviour
         exitButton.visible = true;
 
         // Spawn item in
-        //Main.spawnObject("Water");
+        Main.spawnObject(2, ItemsList.FoodItems.None);
+
+    }
+
+    private void OnLight(ClickEvent evnt)
+    {
+        // Bring up a light settings menu
+        // Low, Mid, High
+        // These just affect stat- specifically water and food increase/decrease
+        lightMenu.visible = true;
+    }
+
+    private void SetLight(ClickEvent evnt)
+    {
 
     }
 

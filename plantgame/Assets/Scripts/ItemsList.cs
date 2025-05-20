@@ -11,11 +11,12 @@ public class ItemsList
     // 
     public enum FoodItems: int
     {
-        Fertilizer = 15,
-        Fly = 25,
-        MealWorm = 10,
-        EggShell = 5,
-        Steak = 30
+        None,
+        Fertilizer = 20,
+        Fly = 30,
+        MealWorm = 15,
+        EggShell = 10,
+        Steak = 35
 
     }
 
@@ -26,5 +27,10 @@ public class ItemsList
         Wilting,
         Dry,
         Dying
+    }
+
+    public void RandomizeItems()
+    {
+
     }
 }

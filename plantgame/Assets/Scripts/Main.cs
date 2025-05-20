@@ -16,7 +16,7 @@ public class Main : MonoBehaviour
     public delegate void OnDespawn();
     public static OnDespawn despawnObject;
 
-    public delegate void ObjectSpawn(string name, int itemType);
+    public delegate void ObjectSpawn(int itemType, ItemsList.FoodItems foodType);
     public static ObjectSpawn spawnObject;
 
     /*
@@ -102,7 +102,7 @@ public class Main : MonoBehaviour
         {
             // Turn on collision for plant
 
-            currentItem.GetComponent<FoodChoices>().OnUpdate();
+            currentItem.GetComponent<ItemChoices>().OnUpdate();
 
         }
 
@@ -159,13 +159,18 @@ public class Main : MonoBehaviour
         gameUI.OnUIUpdate(currentPlant.GetComponent<PlantCreature>().PlantInfo());
     }
 
-    private void SpawnObject(string name, int itemType)
+    private void SpawnObject(int itemType, ItemsList.FoodItems foodType)
     {
-        GameObject objToSpawn = LoadPrefabFromFile(name);
+
+        // Pass in a number/
+
+        GameObject objToSpawn = LoadPrefabFromFile("Item");
+
+        objToSpawn.GetComponent<ItemChoices>().itemType = itemType;
+        objToSpawn.GetComponent<ItemChoices>().foodType = foodType;
+
         Vector3 spawnPos = new Vector3(4, 3, 0);
         Instantiate(objToSpawn, spawnPos, objToSpawn.transform.rotation);
-
-        // If
 
     }
 

@@ -45,6 +45,7 @@ public class PlantCreature : MonoBehaviour
     // Stat Properties
     float waterCurve = 1.25f;
     float affectCurve = 2.0f;
+    float lightAdditon;
 
 
     // State? - In feed mode/Water mode/Light mode - disable controls to only focus on this so those modes can be the same
@@ -98,23 +99,25 @@ public class PlantCreature : MonoBehaviour
     }
 
     // Feed Plant
-    private void FeedPlant(FoodChoices food)
+    private void FeedPlant(ItemChoices food)
     {
-
+        float foodCalc = 5.25f;
         // Takes food obj - checks what type of food & extract value
         // depending on food, hunger values will go up
-        hunger += (int)food.foodType;
-        Debug.Log(food.foodType.ToString());
+        //Debug.Log(food.foodType.ToString());
         // If food is fav
         if(favFoods.Contains(food.foodType))
         {
             animator.SetTrigger("isHappy");
+            foodCalc = (int)food.foodType * 1.25f;
         }
         else if(hateFoods.Contains(food.foodType))
         {
             animator.SetTrigger("isSad");
+            foodCalc = (int)food.foodType * 0.25f;
         }
-        
+
+        hunger += foodCalc;
 
         Debug.Log("Plant Hunger Level:" + hunger);
     }
@@ -128,6 +131,11 @@ public class PlantCreature : MonoBehaviour
     }
 
     // Give plant light
+    private void SetLight()
+    {
+        // Set the light
+
+    }
 
     // Give plant affection
     private void PetPlant()
@@ -199,7 +207,7 @@ public class PlantCreature : MonoBehaviour
      */
     private void OnCollisionEnter(Collision collision)
     {
-        FoodChoices foodItem = collision.gameObject.GetComponent<FoodChoices>();
+        ItemChoices foodItem = collision.gameObject.GetComponent<ItemChoices>();
         if (foodItem.itemType == 1)
         {
             FeedPlant(foodItem);
@@ -213,7 +221,7 @@ public class PlantCreature : MonoBehaviour
 
     private void OnCollisionStay(Collision collision)
     {
-        if (collision.gameObject.GetComponent<FoodChoices>().itemType == 2)
+        if (collision.gameObject.GetComponent<ItemChoices>().itemType == 2)
         {
             WaterPlant();
 
