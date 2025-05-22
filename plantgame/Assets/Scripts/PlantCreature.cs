@@ -34,9 +34,6 @@ public class PlantCreature : MonoBehaviour
 
     public bool petMode = false;
 
-    PlantAnimation animations;
-    int reactions;
-
     private List<ItemsList.FoodItems> favFoods;
     private List<ItemsList.FoodItems> hateFoods;
 
@@ -47,6 +44,13 @@ public class PlantCreature : MonoBehaviour
 
     ItemsList.LightMode currentMode;
 
+    // Dialogue Related
+    bool inConversation;
+    [SerializeField]
+    public DialogueAsset plantDialog;
+    int startPos;
+
+    public bool InConversation { get; }
 
     // State? - In feed mode/Water mode/Light mode - disable controls to only focus on this so those modes can be the same
 
@@ -167,6 +171,22 @@ public class PlantCreature : MonoBehaviour
         Debug.Log("Plant pet!");
     }
 
+    // Talk to plant
+    public void Talk()
+    {
+        /*
+        if (inConversation)
+        {
+            DialogueController.instance.SkipLine();
+        }
+        else
+        {
+            DialogueController.instance.ShowDialogue(plantDialog.dialogue, startPos, plantName);
+        }
+        */
+        DialogueController.instance.ShowDialogue(plantDialog.dialogue, startPos, plantName);
+    }
+
     // Show Plant info
     public string PlantInfo()
     {
@@ -193,21 +213,25 @@ public class PlantCreature : MonoBehaviour
         if (hunger >= 75.0f && water >= 75.0f && affection >= 75.0f)
         {
             plantStatus = ItemsList.PlantStatus.Happy;
+            startPos = 4;
         }
 
         if (affection <= 40.0f)
         {
             plantStatus = ItemsList.PlantStatus.Sad;
+            startPos = 2;
         }
 
         if (water >= 40.0f && water <= 50.0f)
         {
             plantStatus = ItemsList.PlantStatus.Dry;
+            startPos = 1;
         }
 
-        if (water < 40.0f && hunger < 40.0f)
+        if (hunger < 40.0f)
         {
             plantStatus = ItemsList.PlantStatus.Wilting;
+            startPos = 0;
         }
 
         if (hunger < 25.0f && water < 25.0f && affection < 25.0f)

@@ -1,6 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -9,7 +11,10 @@ public class Main : MonoBehaviour
     // Events & Delegates
     public delegate void OnUIReset();
     public static OnUIReset resetMainUI;
-    
+
+    public delegate void Talk();
+    public static Talk talkPlant;
+
     public delegate void ChangePlantState();
     public static ChangePlantState switchState;
 
@@ -65,12 +70,18 @@ public class Main : MonoBehaviour
     [SerializeField]
     public Texture2D cursorTexture;
 
+    public static Main Instance { get; private set; }
+
     private void Awake()
     {
-
-        currentPlant = GameObject.FindWithTag("Player");
-        gameUI = GameObject.Find("UI").GetComponent<UIController>();
-        plantMode = currentPlant.GetComponent<PlantCreature>().petMode;
+        if (Instance != null && Instance != this)
+        {
+            Destroy(this);
+        }
+        else
+        {
+            Instance = this;
+        }
 
         resetMainUI += ResetUI;
         resetMainUI += UIUpdates;
@@ -81,14 +92,16 @@ public class Main : MonoBehaviour
 
         switchState += ChangeMode;
         lightState += ChangeLight;
-
-        //createCursor += InstantiateHand;
+        talkPlant += PlantTalk;
 
     }
 
     // Start is called before the first frame update
     void Start()
     {
+        currentPlant = GameObject.FindWithTag("Player");
+        gameUI = GameObject.Find("UI").GetComponent<UIController>();
+        plantMode = currentPlant.GetComponent<PlantCreature>().petMode;
         UIUpdates();    // Show current plant stats
         print(currentPlant);
     }
@@ -122,6 +135,11 @@ public class Main : MonoBehaviour
             }
         }
 
+        if(Input.GetMouseButtonDown(0) && DialogueController.instance.DialogBox.visible)
+        {
+            ResetUI();
+        }
+
         //DebugLogs();
         currentPlant.GetComponent<PlantCreature>().OnUpdate();
         // Once plant has updated, bring back all UI things
@@ -152,6 +170,12 @@ public class Main : MonoBehaviour
         gameUI.ResetUI();
     }
 
+    public void PlantTalk()
+    {
+        currentPlant.GetComponent<PlantCreature>().Talk();
+    }
+
+    
     /*
     public void InstantiateHand()
     {

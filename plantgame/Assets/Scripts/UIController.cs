@@ -27,6 +27,7 @@ public class UIController : MonoBehaviour
     private Button meatButton;
     private Button wormBtn;
     private Button petBtn;
+    private Button talkBtn;
     private Button exitButton;
     private Button lowLightBtn;
     private Button medLightBtn;
@@ -34,11 +35,6 @@ public class UIController : MonoBehaviour
 
     [SerializeField]
     public Texture2D mouseCursor;
-
-    // UI
-    Vector3 mousePos;
-    Vector3 objPos;
-    Canvas uiCanvas;
 
     [SerializeField]
     public GameObject meat;
@@ -49,7 +45,6 @@ public class UIController : MonoBehaviour
     {
 
         _document = GetComponent<UIDocument>();
-
         exitButton = _document.rootVisualElement.Q<Button>(name: "exitBtn");
 
         subMenu = _document.rootVisualElement.Q(name: "SubMenu");
@@ -93,18 +88,30 @@ public class UIController : MonoBehaviour
 
         _careMenuButtons[1].RegisterCallback<ClickEvent>(OnWatering);
         _careMenuButtons[3].RegisterCallback<ClickEvent>(OnLight);
+        _careMenuButtons[4].RegisterCallback<ClickEvent>(OnTalk);
 
         lowLightBtn.RegisterCallback<ClickEvent, ItemsList.LightMode>(SetLight, ItemsList.LightMode.Low);
         medLightBtn.RegisterCallback<ClickEvent, ItemsList.LightMode>(SetLight, ItemsList.LightMode.Medium);
         highLightBtn.RegisterCallback<ClickEvent, ItemsList.LightMode>(SetLight, ItemsList.LightMode.High);
 
+
+
+    }
+
+    public void Start()
+    {
+        // Dialog box
+        DialogueController.instance.DialogBox = _document.rootVisualElement.Q(name: "dialogBox");
+        DialogueController.instance.DialogueName = DialogueController.instance.DialogBox.Q<Label>(name: "name");
+        DialogueController.instance.DialogueText = DialogueController.instance.DialogBox.Q<Label>(name: "dialogText");
+
+        DialogueController.instance.DialogBox.visible = false;
     }
 
     public void OnUIUpdate(string info)
     {
         // Update Debug Menu
         debugMenu.Q<Label>(name: "plantStats").text = "Plant Stats:\n" + info;
-
 
     }
 
@@ -208,6 +215,19 @@ public class UIController : MonoBehaviour
         //Main.createCursor?.Invoke();
     }
 
+    private void OnTalk(ClickEvent evnt)
+    {
+        _document.rootVisualElement.Q(name: "main").visible = false;
+        Main.talkPlant?.Invoke();
+        DialogueController.instance.DialogBox.visible = true;
+
+        // Set this as event tht fires along with interact of the plant
+        // in plant decide what type of dialogue to load up
+        // here us just show dialogue
+        // Player interact event
+        
+    }
+
     // Assign everything here that applies to all buttons
     private void OnAllButtonsClicked(ClickEvent click)
     {
@@ -220,6 +240,7 @@ public class UIController : MonoBehaviour
         exitButton.visible = false;
 
         _document.rootVisualElement.Q(name: "FoodMenu").visible = false;
+        DialogueController.instance.DialogBox.visible = false;
     }
 
     private void DebugMenuUpdate()
