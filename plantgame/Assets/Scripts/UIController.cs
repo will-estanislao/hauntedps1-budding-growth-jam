@@ -20,6 +20,7 @@ public class UIController : MonoBehaviour
     private VisualElement subMenu;
     private VisualElement debugMenu;
     private VisualElement mainMenu;
+    private VisualElement nextDay;
 
     private VisualElement foodMenu;
     private VisualElement lightMenu;
@@ -27,7 +28,6 @@ public class UIController : MonoBehaviour
     private Button meatButton;
     private Button wormBtn;
     private Button petBtn;
-    private Button talkBtn;
     private Button exitButton;
     private Button lowLightBtn;
     private Button medLightBtn;
@@ -50,6 +50,7 @@ public class UIController : MonoBehaviour
         subMenu = _document.rootVisualElement.Q(name: "SubMenu");
         mainMenu = _document.rootVisualElement.Q(name: "main");
         debugMenu = _document.rootVisualElement.Q(name: "DebugUI");
+        nextDay = _document.rootVisualElement.Q(name: "nextDay");
 
         foodMenu = subMenu.Q<VisualElement>(name: "FoodMenu");
         lightMenu = subMenu.Q<VisualElement>(name: "LightMenu");
@@ -89,6 +90,7 @@ public class UIController : MonoBehaviour
         _careMenuButtons[1].RegisterCallback<ClickEvent>(OnWatering);
         _careMenuButtons[3].RegisterCallback<ClickEvent>(OnLight);
         _careMenuButtons[4].RegisterCallback<ClickEvent>(OnTalk);
+        _careMenuButtons[5].RegisterCallback<ClickEvent>(OnNextDay);
 
         lowLightBtn.RegisterCallback<ClickEvent, ItemsList.LightMode>(SetLight, ItemsList.LightMode.Low);
         medLightBtn.RegisterCallback<ClickEvent, ItemsList.LightMode>(SetLight, ItemsList.LightMode.Medium);
@@ -134,6 +136,28 @@ public class UIController : MonoBehaviour
         lowLightBtn.UnregisterCallback<ClickEvent, ItemsList.LightMode>(SetLight);
         medLightBtn.UnregisterCallback<ClickEvent, ItemsList.LightMode>(SetLight);
         highLightBtn.UnregisterCallback<ClickEvent, ItemsList.LightMode>(SetLight);
+    }
+
+    private void OnNextDay(ClickEvent evnt)
+    {
+        nextDay.visible = true;
+        //Main.Instance.SetUpNewStage();
+        if(Main.Instance.plantDataSave.plantStage == 3)
+        {
+            Invoke(nameof(OnEndGame), 2);
+        }
+        else
+        {
+            Main.Instance.Invoke("SetUpNewStage", 2);
+        }
+    }
+
+    private void OnEndGame()
+    {
+        mainMenu.visible = false;
+        nextDay.visible = false;
+        Main.gameEnd = true;
+        Main.Instance.EndGame();
     }
 
     private void OnExit(ClickEvent evnt)
@@ -238,6 +262,7 @@ public class UIController : MonoBehaviour
     {
         _document.rootVisualElement.Q(name: "main").visible = true;
         exitButton.visible = false;
+        nextDay.visible = false;
 
         _document.rootVisualElement.Q(name: "FoodMenu").visible = false;
         DialogueController.instance.DialogBox.visible = false;

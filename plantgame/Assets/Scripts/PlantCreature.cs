@@ -16,41 +16,42 @@ public class PlantCreature : MonoBehaviour
 
     // Plant Properties
     [SerializeField, Range(0, 100)]
-    float water = 25.0f;
+    private float water;
+    public float Water { get => water; }
     [SerializeField, Range(0, 100)]
-    float hunger = 25.0f;
+    private float hunger;
+    public float Hunger { get => hunger; }
     [SerializeField, Range(0, 100)]
-    float affection = 25.0f;
-    // Accessories - Array that holds accessories
-    // Will need to create some obj, 
-    // Plant Type
-    string plantType = "Pitcher Plant";
-    // Plant Stage
-    int plantStage = 1;
-    // Plant status
-    ItemsList.PlantStatus plantStatus = ItemsList.PlantStatus.Sad;
+    private float  affection;
+    public float Affection { get => affection; }
+    private string plantType = "Pitcher Plant";
+    [SerializeField, Range(1,3)]
+    private int plantStage;
+    public int PlantStage { get => plantStage; }
+    private ItemsList.PlantStatus plantStatus;
+    public ItemsList.PlantStatus PlantStatus { get => plantStatus; }
     [SerializeField]
-    string plantName = "Twoey";
+    private string plantName;
+    public string PlantName { get => plantName; }
 
     public bool petMode = false;
 
-    private List<ItemsList.FoodItems> favFoods;
-    private List<ItemsList.FoodItems> hateFoods;
+    private List<ItemsList.FoodItems> favFoods = new List<ItemsList.FoodItems>() { ItemsList.FoodItems.Steak };
+    private List<ItemsList.FoodItems> hateFoods = new List<ItemsList.FoodItems>() { ItemsList.FoodItems.MealWorm };
 
     // Stat Properties
-    float waterCurve = 1.25f;
-    float affectCurve = 2.0f;
-    float lightAdditon = 1.0f;
+    private float waterCurve = 1.25f;
+    private float affectCurve = 2.0f;
+    private float lightAdditon = 1.0f;
 
-    ItemsList.LightMode currentMode;
+    ItemsList.LightMode currentMode = ItemsList.LightMode.Medium;
+    public ItemsList.LightMode CurrentMode { get => currentMode; }
 
     // Dialogue Related
-    bool inConversation;
     [SerializeField]
     public DialogueAsset plantDialog;
     int startPos;
-
-    public bool InConversation { get; }
+    bool inConversation;
 
     // State? - In feed mode/Water mode/Light mode - disable controls to only focus on this so those modes can be the same
 
@@ -62,11 +63,11 @@ public class PlantCreature : MonoBehaviour
     int isSadHash;
     int isIdleHash;
 
+    
+
+    // This will run on new instantiation....
     private void Awake()
     {
-        currentMode = ItemsList.LightMode.Medium;
-        favFoods = new List<ItemsList.FoodItems>() { ItemsList.FoodItems.Steak };
-        hateFoods = new List<ItemsList.FoodItems>() { ItemsList.FoodItems.MealWorm };
         petPlant += PetPlant;
 
         animator = GetComponent<Animator>();
@@ -174,16 +175,6 @@ public class PlantCreature : MonoBehaviour
     // Talk to plant
     public void Talk()
     {
-        /*
-        if (inConversation)
-        {
-            DialogueController.instance.SkipLine();
-        }
-        else
-        {
-            DialogueController.instance.ShowDialogue(plantDialog.dialogue, startPos, plantName);
-        }
-        */
         DialogueController.instance.ShowDialogue(plantDialog.dialogue, startPos, plantName);
     }
 
@@ -201,6 +192,45 @@ public class PlantCreature : MonoBehaviour
 
     }
 
+    public bool IsStatZero()
+    {
+        if (water == 0.0f || hunger == 0.0f)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    public void PlantEndGame()
+    {
+
+        //if good end vs bad end
+        //if stage3 && endgame Start dialogue line for endgame
+        if (inConversation)
+        {
+            DialogueController.instance.SkipLine();
+        }
+        else
+        {
+            if (Main.isGoodEnd)
+            {
+                DialogueController.instance.ShowDialogue(plantDialog.goodEndDialogue, 0, plantName);
+            }
+            else
+            {
+                DialogueController.instance.ShowDialogue(plantDialog.badEndDialogue, 0, plantName);
+            }
+        }
+
+        // Dialogue
+
+        // Play animation
+
+    }
+
     private void StatusChange()
     {
         // If certain conditions are not met change status
@@ -210,36 +240,77 @@ public class PlantCreature : MonoBehaviour
         // Wilting - Water Stat in <40%
         // Dying - All stats are below 25%
 
-        if (hunger >= 75.0f && water >= 75.0f && affection >= 75.0f)
+        if (hunger >= 65.0f && water >= 65.0f && affection >= 65.0f)
         {
             plantStatus = ItemsList.PlantStatus.Happy;
             startPos = 4;
         }
 
-        if (affection <= 40.0f)
+        if (water > affection && hunger > affection)
         {
             plantStatus = ItemsList.PlantStatus.Sad;
             startPos = 2;
         }
 
-        if (water >= 40.0f && water <= 50.0f)
+        if (water < affection && water < hunger)
         {
             plantStatus = ItemsList.PlantStatus.Dry;
             startPos = 1;
         }
 
-        if (hunger < 40.0f)
+        if (hunger < water && hunger < affection)
         {
             plantStatus = ItemsList.PlantStatus.Wilting;
             startPos = 0;
         }
 
-        if (hunger < 25.0f && water < 25.0f && affection < 25.0f)
+        if(hunger >= 40.0f && water >= 40.0f && affection >= 40.0f)
+        {
+            plantStatus = ItemsList.PlantStatus.Neutral;
+        }
+
+        if (hunger <= 25.0f && water <= 25.0f && affection <= 25.0f)
         {
             plantStatus = ItemsList.PlantStatus.Dying;
         }
 
+        // Stat for dead - therefore game over
+        // If plant ends stage not happy- leads to bad end
 
+    }
+
+    public void SetPlantStatsOnNewStage(PlantData prevPlantData)
+    {
+        water = prevPlantData.water;
+        hunger = prevPlantData.hunger;
+        affection = prevPlantData.affection;
+        plantStage = prevPlantData.plantStage;
+        plantName = prevPlantData.plantName;
+        plantStatus = prevPlantData.plantStatus;
+        currentMode = prevPlantData.plantLight;
+
+    }
+
+    private void JoinConvo()
+    {
+        inConversation = true;
+    }
+
+    private void LeaveConvo()
+    {
+        inConversation = false;
+    }
+
+    private void OnEnable()
+    {
+        DialogueController.OnDialogStarted += JoinConvo;
+        DialogueController.OnDialogEnded += LeaveConvo;
+    }
+
+    private void OnDisable()
+    {
+        DialogueController.OnDialogStarted -= JoinConvo;
+        DialogueController.OnDialogEnded -= LeaveConvo;
     }
     #endregion
 

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
 
 public class Main : MonoBehaviour
@@ -27,30 +28,24 @@ public class Main : MonoBehaviour
     public delegate void ObjectSpawn(int itemType, ItemsList.FoodItems foodType);
     public static ObjectSpawn spawnObject;
 
-    /*
-    public delegate void SpawnCursor();
-    public static SpawnCursor createCursor;
-    */
+    private float CAMDISTANCE = 15.0f;
 
     // Stats
-    private int day;
-
-
-    // UI
-    Vector3 mousePos;
-    Vector3 objPos;
-    Canvas uiCanvas;
-
-    // Mouse Controls
-    Ray ray;
-    RaycastHit hit;
+    private int currentStage;
 
     // Plant Game OBJ
     private GameObject currentPlant;
-
-
     private GameObject currentItem;
-    public GameObject[] allItems;
+    private string fileName;
+    private Vector3 plantSpot = new Vector3(0, 1, 0);
+
+    [SerializeField]
+    private GameObject Stage1Plant;
+    [SerializeField]
+    private GameObject Stage2Plant;
+    [SerializeField]
+    private GameObject Stage3Plant;
+    GameObject tempObj;
 
     [SerializeField]
     public Camera currentCam;
@@ -58,17 +53,19 @@ public class Main : MonoBehaviour
     [SerializeField]
     public UIController gameUI;
 
-    //[SerializeField]
-    //public GameObject hand;
-    //private GameObject petHand;
-
+    public static bool gameEnd;
+    public static bool isGoodEnd;
     public static bool plantMode;
+    Vector3 mousePos;
     private Ray rayCast;
     private RaycastHit hitData;
 
     // Mouse Cursor
     [SerializeField]
     public Texture2D cursorTexture;
+
+    [SerializeField]
+    public PlantData plantDataSave;
 
     public static Main Instance { get; private set; }
 
@@ -94,14 +91,21 @@ public class Main : MonoBehaviour
         lightState += ChangeLight;
         talkPlant += PlantTalk;
 
+        gameEnd = false;
+        isGoodEnd = false;
+        currentPlant = Instantiate(Stage1Plant);
+        tempObj = new GameObject();
     }
 
     // Start is called before the first frame update
     void Start()
     {
-        currentPlant = GameObject.FindWithTag("Player");
+        
         gameUI = GameObject.Find("UI").GetComponent<UIController>();
         plantMode = currentPlant.GetComponent<PlantCreature>().petMode;
+
+        plantDataSave.UpdateCurrentStats(currentPlant.GetComponent<PlantCreature>());
+
         UIUpdates();    // Show current plant stats
         print(currentPlant);
     }
@@ -112,38 +116,50 @@ public class Main : MonoBehaviour
         // Check for food if there is there
         currentItem = GameObject.FindWithTag("Item");
 
-        mousePos = currentCam.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 10.0f));
+        mousePos = currentCam.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, CAMDISTANCE));
         rayCast = currentCam.ScreenPointToRay(Input.mousePosition);
 
-        if (Input.GetMouseButton(0) && currentItem != null)
+        if(currentPlant.GetComponent<PlantCreature>().IsStatZero())
         {
-            // Turn on collision for plant
-
-            currentItem.GetComponent<ItemChoices>().OnUpdate();
-
+            //GameOver();
         }
 
-        if (Input.GetMouseButton(0) && plantMode)
+        if(!gameEnd)
         {
-            // Play hand animation
-            //petHand.GetComponent<Animation>().Play();
-            // Create a ray from mouse pos, if mouse pos hits specifically something
-            // and it is plant obj, call on pet
-            if (Physics.Raycast(rayCast, out hitData) && hitData.transform.gameObject.CompareTag("Player"))
+            if (Input.GetMouseButton(0) && currentItem != null)
             {
-                PlantCreature.petPlant?.Invoke();
+                // Turn on collision for plant
+
+                currentItem.GetComponent<ItemChoices>().OnUpdate();
+
+            }
+
+            if (Input.GetMouseButton(0) && plantMode)
+            {
+                // Play hand animation
+                //petHand.GetComponent<Animation>().Play();
+                // Create a ray from mouse pos, if mouse pos hits specifically something
+                // and it is plant obj, call on pet
+                if (Physics.Raycast(rayCast, out hitData) && hitData.transform.gameObject.CompareTag("Player"))
+                {
+                    PlantCreature.petPlant?.Invoke();
+                }
+            }
+
+            if (Input.GetMouseButtonDown(0) && DialogueController.instance.DialogBox.visible)
+            {
+                ResetUI();
+            }
+
+            //DebugLogs();
+            if (currentPlant != null)
+            {
+                currentPlant.GetComponent<PlantCreature>().OnUpdate();
+                plantDataSave.UpdateCurrentStats(currentPlant.GetComponent<PlantCreature>());
+                UIUpdates();
             }
         }
-
-        if(Input.GetMouseButtonDown(0) && DialogueController.instance.DialogBox.visible)
-        {
-            ResetUI();
-        }
-
-        //DebugLogs();
-        currentPlant.GetComponent<PlantCreature>().OnUpdate();
-        // Once plant has updated, bring back all UI things
-        UIUpdates();
+        // Check if its the last stage and start end game
 
     }
 
@@ -175,21 +191,80 @@ public class Main : MonoBehaviour
         currentPlant.GetComponent<PlantCreature>().Talk();
     }
 
-    
-    /*
-    public void InstantiateHand()
-    {
-        if(!hand.activeInHierarchy)
-        {
-            Debug.Log("Hand Instantiated");
-            petHand = Instantiate(hand, new Vector3(mousePos.x, mousePos.y, 0.0f), hand.transform.rotation);
-        }
-    }
-    */
-
     public void UIUpdates()
     {
         gameUI.OnUIUpdate(currentPlant.GetComponent<PlantCreature>().PlantInfo());
+    }
+
+    public void SetUpNewStage()
+    {
+        // Save the current plants data
+        plantDataSave.UpdateCurrentStats(currentPlant.GetComponent<PlantCreature>());
+
+        // Destroy plant obj
+        if(currentPlant != null)
+        {
+            Destroy(currentPlant);
+        }
+        
+        if (plantDataSave.plantStage == 1)
+        {
+            tempObj = LoadPrefabFromFile("Stage2PlantPrefab");
+            
+        }
+        else if (plantDataSave.plantStage == 2)
+        {
+            // Move camera a bit
+            tempObj = LoadPrefabFromFile("Stage3Plant");
+            
+        }
+
+        plantDataSave.SetStageStats();
+
+        currentPlant = Instantiate(tempObj);
+
+        // Set prev plant data to new plant
+        currentPlant.GetComponent<PlantCreature>().SetPlantStatsOnNewStage(plantDataSave);
+
+        ResetUI();
+
+    }
+
+    public void EndGame()
+    {
+        int endGameCount = 0;
+        // Check on whether its good end
+        foreach(ItemsList.PlantStatus status in plantDataSave.endStatus)
+        {
+            if(status == ItemsList.PlantStatus.Happy)
+            {
+                endGameCount++;
+            }
+        }
+
+        if(endGameCount == 3)
+        {
+            isGoodEnd = true;
+        }
+
+        // Need some while for dialogue
+        if (Input.GetMouseButtonDown(0))
+        {
+            // Plant dialogue, denoting its unhappy...
+            currentPlant.GetComponent<PlantCreature>().PlantEndGame();
+
+        }
+
+        // load new screen
+        Debug.Log("GameEnd");
+    }
+
+    public void GameOver()
+    {
+        // stop everything 
+
+        // game over screen
+        SceneManager.LoadScene(2);
     }
 
     private void SpawnObject(int itemType, ItemsList.FoodItems foodType)
@@ -214,13 +289,6 @@ public class Main : MonoBehaviour
         {
             Destroy(currentItem);
         }
-        /*
-        //Debug.Log("Hand in hierarchy: " + hand.activeInHierarchy);
-        if (petHand != null)
-        {
-            Destroy(petHand);
-        }
-        */
     }
 
     #region Loading Asset

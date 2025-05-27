@@ -10,4 +10,10 @@ public class DialogueAsset : ScriptableObject
 
     [TextArea]
     public string[] secretDialogue;
+
+    [TextArea]
+    public string[] badEndDialogue;
+
+    [TextArea]
+    public string[] goodEndDialogue;
 }

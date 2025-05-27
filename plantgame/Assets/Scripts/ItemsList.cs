@@ -4,11 +4,6 @@ using UnityEngine;
 
 public class ItemsList
 {
-    public struct Food
-    {
-        public int Fertilizer;
-    }
-    // 
     public enum FoodItems: int
     {
         None,
@@ -23,6 +18,7 @@ public class ItemsList
     public enum PlantStatus
     {
         Happy,
+        Neutral,
         Sad,
         Wilting,
         Dry,
@@ -37,8 +33,4 @@ public class ItemsList
         High
     }
 
-    public void RandomizeItems()
-    {
-
-    }
 }

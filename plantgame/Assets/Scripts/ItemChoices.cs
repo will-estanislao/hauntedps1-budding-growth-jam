@@ -17,6 +17,8 @@ public class ItemChoices : MonoBehaviour
 
     private bool isDragging = false;
 
+    private float CAMDISTANCE = 15.0f;
+
     private void Awake()
     {
         objRigidbody = GetComponent<Rigidbody>();
@@ -48,7 +50,7 @@ public class ItemChoices : MonoBehaviour
     public void DragObject()
     {
 
-        Vector3 mousePos = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 10.0f));
+        Vector3 mousePos = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, CAMDISTANCE));
         
 
         //Debug.Log("On Drag" + mousePos + "\nObject Location: " + transform.position);

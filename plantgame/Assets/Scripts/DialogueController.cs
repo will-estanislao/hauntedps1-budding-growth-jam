@@ -50,6 +50,18 @@ public class DialogueController: MonoBehaviour
 
     }
 
+    public void ShowDialogue2(string[] dialogue, int startPosition, string name)
+    {
+        DialogueName.text = name;
+
+        //DialogueText.text = dialogue;
+
+        DialogBox.visible = true;
+        //StopAllCoroutines();
+        StartCoroutine(RunDialogue(dialogue, startPosition));
+
+    }
+
     IEnumerator RunDialogue(string[] dialogue, int startPositon)
     {
         skipLineTriggered = false;
