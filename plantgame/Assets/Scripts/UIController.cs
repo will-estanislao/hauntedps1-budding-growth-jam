@@ -17,6 +17,7 @@ public class UIController : MonoBehaviour
 
     // Subscribing multiple buttons to events
     private List<Button> _careMenuButtons = new List<Button>();
+    private List<Button> allButtons = new List<Button>();
     private VisualElement subMenu;
     private VisualElement debugMenu;
     private VisualElement mainMenu;
@@ -25,8 +26,13 @@ public class UIController : MonoBehaviour
     private VisualElement foodMenu;
     private VisualElement lightMenu;
 
+    private Label infoTxt;
+
     private Button meatButton;
     private Button wormBtn;
+    private Button eggBtn;
+    private Button fertilizerBtn;
+    private Button flyBtn;
     private Button petBtn;
     private Button exitButton;
     private Button lowLightBtn;
@@ -57,9 +63,14 @@ public class UIController : MonoBehaviour
 
         meatButton = foodMenu.Q<Button>("Steak");
         wormBtn = foodMenu.Q<Button>("Mealworm");
+        flyBtn = foodMenu.Q<Button>("Fly");
+        fertilizerBtn = foodMenu.Q<Button>("Fertilizer");
+        eggBtn = foodMenu.Q<Button>("Eggshell");
         meatButton.RegisterCallback<ClickEvent, ItemsList.FoodItems>(SpawnFood, ItemsList.FoodItems.Steak);
         wormBtn.RegisterCallback<ClickEvent, ItemsList.FoodItems>(SpawnFood, ItemsList.FoodItems.MealWorm);
-
+        flyBtn.RegisterCallback<ClickEvent, ItemsList.FoodItems>(SpawnFood, ItemsList.FoodItems.Fly);
+        eggBtn.RegisterCallback<ClickEvent, ItemsList.FoodItems>(SpawnFood, ItemsList.FoodItems.EggShell);
+        fertilizerBtn.RegisterCallback<ClickEvent, ItemsList.FoodItems>(SpawnFood, ItemsList.FoodItems.Fertilizer);
         petBtn = mainMenu.Q<Button>("petButton");
 
         lowLightBtn = lightMenu.Q<Button>("Low");
@@ -80,7 +91,7 @@ public class UIController : MonoBehaviour
 
         petBtn.RegisterCallback<ClickEvent>(OnPet);
 
-        _careMenuButtons = _document.rootVisualElement.Query<Button>(className: "care-menu-btn").ToList();
+        _careMenuButtons = mainMenu.Query<Button>(className: "care-menu-btn").ToList();
         for (int i = 0; i < _careMenuButtons.Count; i++)
         {
             _careMenuButtons[i].RegisterCallback<ClickEvent>(OnAllButtonsClicked);
@@ -96,8 +107,13 @@ public class UIController : MonoBehaviour
         medLightBtn.RegisterCallback<ClickEvent, ItemsList.LightMode>(SetLight, ItemsList.LightMode.Medium);
         highLightBtn.RegisterCallback<ClickEvent, ItemsList.LightMode>(SetLight, ItemsList.LightMode.High);
 
+        allButtons = _document.rootVisualElement.Query<Button>(className: "unity-button").ToList();
+        for (int i = 0; i < allButtons.Count; i++)
+        {
+            allButtons[i].RegisterCallback<ClickEvent>(OnAllButtonsClicked);
+        }
 
-
+        infoTxt = mainMenu.Q<Label>(name: "info");
     }
 
     public void Start()
@@ -108,12 +124,15 @@ public class UIController : MonoBehaviour
         DialogueController.instance.DialogueText = DialogueController.instance.DialogBox.Q<Label>(name: "dialogText");
 
         DialogueController.instance.DialogBox.visible = false;
+
+        Debug.Log(mainMenu);
     }
 
     public void OnUIUpdate(string info)
     {
         // Update Debug Menu
         debugMenu.Q<Label>(name: "plantStats").text = "Plant Stats:\n" + info;
+        infoTxt.text = "Day: " + Main.currentDay + " Stage: " + Main.Instance.plantDataSave.plantStage;
 
     }
 
@@ -129,6 +148,7 @@ public class UIController : MonoBehaviour
         for (int i = 0; i < _careMenuButtons.Count; i++)
         {
             _careMenuButtons[i].UnregisterCallback<ClickEvent>(OnAllButtonsClicked);
+            allButtons[i].RegisterCallback<ClickEvent>(OnAllButtonsClicked);
         }
 
         _careMenuButtons[3].UnregisterCallback<ClickEvent>(OnLight);
@@ -156,8 +176,7 @@ public class UIController : MonoBehaviour
     {
         mainMenu.visible = false;
         nextDay.visible = false;
-        Main.gameEnd = true;
-        Main.Instance.EndGame();
+        StartCoroutine(Main.Instance.EndGame());
     }
 
     private void OnExit(ClickEvent evnt)
@@ -242,7 +261,7 @@ public class UIController : MonoBehaviour
     private void OnTalk(ClickEvent evnt)
     {
         _document.rootVisualElement.Q(name: "main").visible = false;
-        Main.talkPlant?.Invoke();
+        Main.Instance.PlantTalk();
         DialogueController.instance.DialogBox.visible = true;
 
         // Set this as event tht fires along with interact of the plant
@@ -256,6 +275,7 @@ public class UIController : MonoBehaviour
     private void OnAllButtonsClicked(ClickEvent click)
     {
         Debug.Log("Button Click was successful\n Button Assignment was a success");
+        AudioController.Instance.PlayClick();
     }
 
     public void ResetUI()
@@ -263,9 +283,19 @@ public class UIController : MonoBehaviour
         _document.rootVisualElement.Q(name: "main").visible = true;
         exitButton.visible = false;
         nextDay.visible = false;
+        lightMenu.visible = false;
 
         _document.rootVisualElement.Q(name: "FoodMenu").visible = false;
         DialogueController.instance.DialogBox.visible = false;
+    }
+
+    public void HideAllUI()
+    {
+        _document.rootVisualElement.Q(name: "main").visible = false;
+        exitButton.visible = false;
+        nextDay.visible = false;
+        lightMenu.visible = false;
+        _document.rootVisualElement.Q(name: "FoodMenu").visible = false;
     }
 
     private void DebugMenuUpdate()

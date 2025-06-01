@@ -14,6 +14,8 @@ public class ItemChoices : MonoBehaviour
     public ItemsList.FoodItems foodType;
 
     Rigidbody objRigidbody;
+    SpriteRenderer sprite;
+    Sprite spriteObJ;
 
     private bool isDragging = false;
 
@@ -22,6 +24,12 @@ public class ItemChoices : MonoBehaviour
     private void Awake()
     {
         objRigidbody = GetComponent<Rigidbody>();
+        sprite = GetComponent<SpriteRenderer>();
+
+        spriteObJ = LoadAsset(FindFileName(foodType));
+
+        sprite.sprite = spriteObJ;
+        
     }
 
     public void OnUpdate()
@@ -35,16 +43,59 @@ public class ItemChoices : MonoBehaviour
     private void OnMouseDown()
     {
         isDragging = true;
+        //objRigidbody.gravityScale = 0;
         objRigidbody.useGravity = false;
-        // Enable Collision
-        
     }
 
     private void OnMouseUp()
     {
         isDragging = false;
+        //objRigidbody.gravityScale = 1;
         objRigidbody.useGravity = true;
-        //Disable collision
+    }
+
+    private string FindFileName(ItemsList.FoodItems foodtype)
+    {
+        if(foodType == ItemsList.FoodItems.Steak)
+        {
+            return "meat";
+        }
+        else if (foodType == ItemsList.FoodItems.MealWorm)
+        {
+            return "worm";
+        }
+        else if (foodType == ItemsList.FoodItems.Fly)
+        {
+            return "fly";
+        }
+        else if (foodType == ItemsList.FoodItems.EggShell)
+        {
+            return "eggshell";
+        }
+        else if (foodType == ItemsList.FoodItems.Fertilizer)
+        {
+            return "fertilizer";
+        }
+        else if (foodType == ItemsList.FoodItems.None)
+        {
+            return "wateringcan";
+        }
+        else
+        {
+            return "";
+        }
+    }
+
+    private Sprite LoadAsset(string filename)
+    {
+        string file = "Sprites/" + filename;
+        Debug.Log("Trying to load Prefab from file (" + filename + ")...");
+        Sprite loadedObject = Resources.Load<Sprite>(file);
+        if (loadedObject == null)
+        {
+            throw new FileNotFoundException("...no file found - please check the configuration");
+        }
+        return loadedObject;
     }
 
     public void DragObject()

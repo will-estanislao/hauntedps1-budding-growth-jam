@@ -14,6 +14,7 @@ public class MainMenuController : MonoBehaviour
     private Button exit;
 
     private VisualElement credits;
+    private VisualElement story;
 
 
     private void Awake()
@@ -22,6 +23,7 @@ public class MainMenuController : MonoBehaviour
         mainMenu = doc.rootVisualElement.Q(name: "mainMenu");
         gameTitle = mainMenu.Q<Label>(name: "title");
         credits = doc.rootVisualElement.Q<VisualElement>(name: "creditsPanel");
+        story = doc.rootVisualElement.Q<VisualElement>(name: "Start");
         exit = credits.Q<Button>(name: "exit");
 
         mainMenuButtons = mainMenu.Query<Button>(className: "menu-btn").ToList();
@@ -34,8 +36,10 @@ public class MainMenuController : MonoBehaviour
         mainMenuButtons[0].RegisterCallback<ClickEvent>(LoadGame);
         mainMenuButtons[1].RegisterCallback<ClickEvent>(QuitGame);
         mainMenuButtons[2].RegisterCallback<ClickEvent>(ShowCredits);
+        story.RegisterCallback<ClickEvent>(OnClickStory);
         exit.RegisterCallback<ClickEvent>(CloseCredits);
         credits.visible = false;
+
 
         
     }
@@ -50,7 +54,14 @@ public class MainMenuController : MonoBehaviour
 
     public void LoadGame(ClickEvent evnt)
     {
+        mainMenu.visible = false;
+        story.visible = true;
         // Load Game Scene
+        
+    }
+
+    public void OnClickStory(ClickEvent evnt)
+    {
         SceneManager.LoadScene(1);
     }
 

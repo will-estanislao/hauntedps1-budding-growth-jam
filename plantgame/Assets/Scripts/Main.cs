@@ -6,15 +6,13 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
+using UnityEngine.Events;
 
 public class Main : MonoBehaviour
 {
     // Events & Delegates
     public delegate void OnUIReset();
     public static OnUIReset resetMainUI;
-
-    public delegate void Talk();
-    public static Talk talkPlant;
 
     public delegate void ChangePlantState();
     public static ChangePlantState switchState;
@@ -31,7 +29,8 @@ public class Main : MonoBehaviour
     private float CAMDISTANCE = 15.0f;
 
     // Stats
-    private int currentStage;
+    public int currentStage;
+    public static int currentDay;
 
     // Plant Game OBJ
     private GameObject currentPlant;
@@ -56,6 +55,8 @@ public class Main : MonoBehaviour
     public static bool gameEnd;
     public static bool isGoodEnd;
     public static bool plantMode;
+    public static bool inConvo;
+
     Vector3 mousePos;
     private Ray rayCast;
     private RaycastHit hitData;
@@ -66,6 +67,8 @@ public class Main : MonoBehaviour
 
     [SerializeField]
     public PlantData plantDataSave;
+
+    public List<ItemsList.PlantStatus> endStatus;
 
     public static Main Instance { get; private set; }
 
@@ -89,8 +92,8 @@ public class Main : MonoBehaviour
 
         switchState += ChangeMode;
         lightState += ChangeLight;
-        talkPlant += PlantTalk;
 
+        inConvo = false;
         gameEnd = false;
         isGoodEnd = false;
         currentPlant = Instantiate(Stage1Plant);
@@ -107,6 +110,8 @@ public class Main : MonoBehaviour
         plantDataSave.UpdateCurrentStats(currentPlant.GetComponent<PlantCreature>());
 
         UIUpdates();    // Show current plant stats
+        currentStage = plantDataSave.plantStage;
+        currentDay = 1;
         print(currentPlant);
     }
 
@@ -118,11 +123,6 @@ public class Main : MonoBehaviour
 
         mousePos = currentCam.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, CAMDISTANCE));
         rayCast = currentCam.ScreenPointToRay(Input.mousePosition);
-
-        if(currentPlant.GetComponent<PlantCreature>().IsStatZero())
-        {
-            //GameOver();
-        }
 
         if(!gameEnd)
         {
@@ -143,12 +143,8 @@ public class Main : MonoBehaviour
                 if (Physics.Raycast(rayCast, out hitData) && hitData.transform.gameObject.CompareTag("Player"))
                 {
                     PlantCreature.petPlant?.Invoke();
+                    StartCoroutine(AudioController.Instance.PlayPetSound());
                 }
-            }
-
-            if (Input.GetMouseButtonDown(0) && DialogueController.instance.DialogBox.visible)
-            {
-                ResetUI();
             }
 
             //DebugLogs();
@@ -159,6 +155,8 @@ public class Main : MonoBehaviour
                 UIUpdates();
             }
         }
+
+        OnClick();
         // Check if its the last stage and start end game
 
     }
@@ -196,10 +194,23 @@ public class Main : MonoBehaviour
         gameUI.OnUIUpdate(currentPlant.GetComponent<PlantCreature>().PlantInfo());
     }
 
+    public void InConversation()
+    {
+        inConvo = true;
+        
+    }
+
+    public void EndConversation()
+    {
+        inConvo = false;
+    }
+
     public void SetUpNewStage()
     {
+        
         // Save the current plants data
         plantDataSave.UpdateCurrentStats(currentPlant.GetComponent<PlantCreature>());
+        endStatus.Add(plantDataSave.plantStatus);
 
         // Destroy plant obj
         if(currentPlant != null)
@@ -226,15 +237,22 @@ public class Main : MonoBehaviour
         // Set prev plant data to new plant
         currentPlant.GetComponent<PlantCreature>().SetPlantStatsOnNewStage(plantDataSave);
 
+        currentDay++;
+        currentStage = plantDataSave.plantStage;
+
         ResetUI();
 
     }
 
-    public void EndGame()
+    public IEnumerator EndGame()
     {
+        plantDataSave.UpdateCurrentStats(currentPlant.GetComponent<PlantCreature>());
+        endStatus.Add(plantDataSave.plantStatus);
+        gameEnd = true;
+
         int endGameCount = 0;
         // Check on whether its good end
-        foreach(ItemsList.PlantStatus status in plantDataSave.endStatus)
+        foreach(ItemsList.PlantStatus status in endStatus)
         {
             if(status == ItemsList.PlantStatus.Happy)
             {
@@ -247,30 +265,49 @@ public class Main : MonoBehaviour
             isGoodEnd = true;
         }
 
-        // Need some while for dialogue
-        if (Input.GetMouseButtonDown(0))
-        {
-            // Plant dialogue, denoting its unhappy...
-            currentPlant.GetComponent<PlantCreature>().PlantEndGame();
-
-        }
+        currentPlant.GetComponent<PlantCreature>().PlantEndGame();
+        yield return new WaitUntil(() => !inConvo);
 
         // load new screen
         Debug.Log("GameEnd");
+        if(!isGoodEnd)
+        {
+            // Animation play - make sure it ends before
+            currentPlant.GetComponent<PlantCreature>().animator.SetTrigger("isEnd");
+            yield return new WaitForSeconds(5);
+            GameOver();
+            //Invoke(nameof(GameOver), 2);
+        }
+        else
+        {
+            // Go to good end screen
+        }
+    }
+
+    public void OnClick()
+    {
+        if(Input.GetMouseButtonDown(0) && inConvo && gameEnd)
+        {
+            DialogueController.instance.DisplayNextSentence();
+        }
+        else if(Input.GetMouseButtonDown(0) && inConvo && !gameEnd)
+        {
+            ResetUI();
+        }
     }
 
     public void GameOver()
     {
-        // stop everything 
+        gameUI.HideAllUI();
 
+        StopAllCoroutines();
+        
         // game over screen
         SceneManager.LoadScene(2);
     }
 
     private void SpawnObject(int itemType, ItemsList.FoodItems foodType)
     {
-
-        // Pass in a number/
 
         GameObject objToSpawn = LoadPrefabFromFile("Item");
 
@@ -294,7 +331,7 @@ public class Main : MonoBehaviour
     #region Loading Asset
     private UnityEngine.GameObject LoadPrefabFromFile(string filename)
     {
-        Debug.Log("Trying to load LevelPrefab from file (" + filename + ")...");
+        Debug.Log("Trying to load Prefab from file (" + filename + ")...");
         GameObject loadedObject = (GameObject)Resources.Load(filename);
         if (loadedObject == null)
         {

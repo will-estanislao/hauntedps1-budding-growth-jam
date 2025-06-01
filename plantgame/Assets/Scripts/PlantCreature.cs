@@ -36,8 +36,8 @@ public class PlantCreature : MonoBehaviour
 
     public bool petMode = false;
 
-    private List<ItemsList.FoodItems> favFoods = new List<ItemsList.FoodItems>() { ItemsList.FoodItems.Steak };
-    private List<ItemsList.FoodItems> hateFoods = new List<ItemsList.FoodItems>() { ItemsList.FoodItems.MealWorm };
+    private List<ItemsList.FoodItems> favFoods = new List<ItemsList.FoodItems>() { ItemsList.FoodItems.Steak, ItemsList.FoodItems.Fly, ItemsList.FoodItems.EggShell };
+    private List<ItemsList.FoodItems> hateFoods = new List<ItemsList.FoodItems>() { ItemsList.FoodItems.MealWorm, ItemsList.FoodItems.Fertilizer };
 
     // Stat Properties
     private float waterCurve = 1.25f;
@@ -52,18 +52,12 @@ public class PlantCreature : MonoBehaviour
     public DialogueAsset plantDialog;
     int startPos;
     bool inConversation;
+    bool isHappy;
 
     // State? - In feed mode/Water mode/Light mode - disable controls to only focus on this so those modes can be the same
 
     // Animation vars
-    private Animator animator;
-
-    // Hashes for animation
-    int isHappyHash;
-    int isSadHash;
-    int isIdleHash;
-
-    
+    public Animator animator;
 
     // This will run on new instantiation....
     private void Awake()
@@ -71,10 +65,11 @@ public class PlantCreature : MonoBehaviour
         petPlant += PetPlant;
 
         animator = GetComponent<Animator>();
+    }
 
-        isHappyHash = Animator.StringToHash("Stage2Happy");
-        isSadHash = Animator.StringToHash("Stage2Sad");
-        isIdleHash = Animator.StringToHash("Stage2Idle");
+    private void Start()
+    {
+        petPlant += PetPlant;
     }
 
     public void OnUpdate()
@@ -83,6 +78,20 @@ public class PlantCreature : MonoBehaviour
         // Do appropriate animation
         // Update plant status
         StatusChange();
+
+        if(IsStatZero())
+        {
+            if(plantStage < 3)
+            {
+                animator.SetTrigger("isDead");
+                Main.Instance.GameOver();
+            }
+            else if (plantStage == 3)
+            {
+                StartCoroutine(Main.Instance.EndGame());
+            }
+            
+        }
 
     }
 
@@ -114,6 +123,7 @@ public class PlantCreature : MonoBehaviour
     // Feed Plant
     private void FeedPlant(ItemChoices food)
     {
+        
         float foodCalc = 5.25f;
         // Takes food obj - checks what type of food & extract value
         // depending on food, hunger values will go up
@@ -121,14 +131,18 @@ public class PlantCreature : MonoBehaviour
         // If food is fav
         if(favFoods.Contains(food.foodType))
         {
-            animator.SetTrigger("isHappy");
+            PlayPlantAnimation("isHappy");
             foodCalc = (int)food.foodType * 1.25f;
+            isHappy = true;
         }
         else if(hateFoods.Contains(food.foodType))
         {
-            animator.SetTrigger("isSad");
+            PlayPlantAnimation("isSad");
             foodCalc = (int)food.foodType * 0.75f;
+            isHappy = false;
         }
+
+       
 
         hunger += foodCalc * lightAdditon;
 
@@ -140,6 +154,7 @@ public class PlantCreature : MonoBehaviour
     // Water Plant
     private void WaterPlant()
     {
+        
         water += Mathf.Clamp(Mathf.Exp(waterCurve), 0.0f, 2.5f) * lightAdditon * Time.deltaTime;
         water = Mathf.Clamp(water, 0, 100);
         Debug.Log("Water Increase: " + water);
@@ -166,6 +181,7 @@ public class PlantCreature : MonoBehaviour
     // Give plant affection
     private void PetPlant()
     {
+        
         affection += Mathf.Clamp(Mathf.Exp(affectCurve), 0.0f, 2.5f) * Time.deltaTime;
         affection = Mathf.Clamp(affection, 0, 100);
 
@@ -175,7 +191,7 @@ public class PlantCreature : MonoBehaviour
     // Talk to plant
     public void Talk()
     {
-        DialogueController.instance.ShowDialogue(plantDialog.dialogue, startPos, plantName);
+        DialogueController.instance.StartDialogue(plantDialog.dialogue, startPos, plantName);
     }
 
     // Show Plant info
@@ -206,29 +222,20 @@ public class PlantCreature : MonoBehaviour
 
     public void PlantEndGame()
     {
-
-        //if good end vs bad end
-        //if stage3 && endgame Start dialogue line for endgame
-        if (inConversation)
+        // Dialogue & Play animation
+        if (Main.isGoodEnd)
         {
-            DialogueController.instance.SkipLine();
+            DialogueController.instance.StartDialogue(plantDialog.goodEndDialogue, plantName);
         }
         else
         {
-            if (Main.isGoodEnd)
-            {
-                DialogueController.instance.ShowDialogue(plantDialog.goodEndDialogue, 0, plantName);
-            }
-            else
-            {
-                DialogueController.instance.ShowDialogue(plantDialog.badEndDialogue, 0, plantName);
-            }
+            DialogueController.instance.StartDialogue(plantDialog.badEndDialogue, plantName);
         }
+    }
 
-        // Dialogue
-
-        // Play animation
-
+    public void PlayPlantAnimation(string animation)
+    {
+        animator.SetTrigger(animation);
     }
 
     private void StatusChange()
@@ -239,43 +246,38 @@ public class PlantCreature : MonoBehaviour
         // Dry - Water Stat in 40% - 60%
         // Wilting - Water Stat in <40%
         // Dying - All stats are below 25%
-
-        if (hunger >= 65.0f && water >= 65.0f && affection >= 65.0f)
+        if (hunger >= 40.0f && hunger < 65.0f && water >= 40.0f && water < 65.0f && affection < 65.0f && affection >= 40.0f)
+        {
+            plantStatus = ItemsList.PlantStatus.Neutral;
+            startPos = 3;
+        }
+        else if (hunger >= 65.0f && water >= 65.0f && affection >= 65.0f)
         {
             plantStatus = ItemsList.PlantStatus.Happy;
             startPos = 4;
         }
 
-        if (water > affection && hunger > affection)
+        if (water > affection && hunger > affection && affection < 40.0f)
         {
             plantStatus = ItemsList.PlantStatus.Sad;
             startPos = 2;
         }
-
-        if (water < affection && water < hunger)
+        else if (water < affection && water < hunger && water < 40.0f)
         {
             plantStatus = ItemsList.PlantStatus.Dry;
             startPos = 1;
         }
-
-        if (hunger < water && hunger < affection)
+        else if (hunger < water && hunger < affection && hunger < 40.0f)
         {
             plantStatus = ItemsList.PlantStatus.Wilting;
             startPos = 0;
         }
 
-        if(hunger >= 40.0f && water >= 40.0f && affection >= 40.0f)
-        {
-            plantStatus = ItemsList.PlantStatus.Neutral;
-        }
-
         if (hunger <= 25.0f && water <= 25.0f && affection <= 25.0f)
         {
             plantStatus = ItemsList.PlantStatus.Dying;
+            startPos = 5;
         }
-
-        // Stat for dead - therefore game over
-        // If plant ends stage not happy- leads to bad end
 
     }
 
@@ -289,28 +291,6 @@ public class PlantCreature : MonoBehaviour
         plantStatus = prevPlantData.plantStatus;
         currentMode = prevPlantData.plantLight;
 
-    }
-
-    private void JoinConvo()
-    {
-        inConversation = true;
-    }
-
-    private void LeaveConvo()
-    {
-        inConversation = false;
-    }
-
-    private void OnEnable()
-    {
-        DialogueController.OnDialogStarted += JoinConvo;
-        DialogueController.OnDialogEnded += LeaveConvo;
-    }
-
-    private void OnDisable()
-    {
-        DialogueController.OnDialogStarted -= JoinConvo;
-        DialogueController.OnDialogEnded -= LeaveConvo;
     }
     #endregion
 
@@ -327,10 +307,18 @@ public class PlantCreature : MonoBehaviour
         {
             FeedPlant(foodItem);
 
+            StartCoroutine(AudioController.Instance.PlayEatSound(isHappy, plantStage));
+            //StartCoroutine(AudioController.Instance.PlayEatSound2());
+            //AudioController.Instance.PlayChomp();
             Destroy(collision.gameObject);
-
             // At the end of doing collision things, Trigger ui reset - event?
-            Main.resetMainUI?.Invoke();
+            Main.Instance.Invoke("ResetUI", 1);
+            //Main.Instance.ResetUI();
+        }
+
+        if(foodItem.itemType == 2)
+        {
+            AudioController.Instance.PlayWater();
         }
     }
 
@@ -341,6 +329,16 @@ public class PlantCreature : MonoBehaviour
             WaterPlant();
 
             Debug.Log("I'm getting watered!");
+        }
+
+    }
+
+    private void OnCollisionExit(Collision collision)
+    {
+        ItemChoices foodItem = collision.gameObject.GetComponent<ItemChoices>();
+        if (foodItem.itemType == 2)
+        {
+            AudioController.Instance.StopPlay();
         }
     }
 }

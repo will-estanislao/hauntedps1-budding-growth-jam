@@ -24,6 +24,10 @@ public class DialogueController: MonoBehaviour
     public static event Action OnDialogStarted;
     public static event Action OnDialogEnded;
 
+    private Queue<string> sentences;
+
+    private int dialogeCount;
+
     bool skipLineTriggered;
 
     private void Awake()
@@ -36,55 +40,61 @@ public class DialogueController: MonoBehaviour
         {
             Destroy(this);
         }
+
+        sentences = new Queue<string>();
     }
 
-    public void ShowDialogue(string[] dialogue, int startPosition, string name)
+    public void StartDialogue(string[] dialogueArray, string name)
     {
+        Main.Instance.InConversation();
+        // When dialogue starts- evoke event in main that disables ui and focuses on click events to moving dialogue
+        //Debug.Log("Current Convo: " + dialogue.badEndDialogue);
         DialogueName.text = name;
-
-        //DialogueText.text = dialogue;
-
         DialogBox.visible = true;
-        StopAllCoroutines();
-        StartCoroutine(RunDialogue(dialogue, startPosition));
 
-    }
+        
 
-    public void ShowDialogue2(string[] dialogue, int startPosition, string name)
-    {
-        DialogueName.text = name;
-
-        //DialogueText.text = dialogue;
-
-        DialogBox.visible = true;
-        //StopAllCoroutines();
-        StartCoroutine(RunDialogue(dialogue, startPosition));
-
-    }
-
-    IEnumerator RunDialogue(string[] dialogue, int startPositon)
-    {
-        skipLineTriggered = false;
-        OnDialogStarted?.Invoke();
-
-        for(int i = startPositon; i < dialogue.Length; i++)
+        sentences.Clear();
+        // Plant responsible for what dialogue gets fed
+        foreach(string sentence in dialogueArray)
         {
-            DialogueText.text = dialogue[i];
-            while(skipLineTriggered == false)
-            {
-                // Wait for current line to be skipped
-                yield return null;
-            }
-            skipLineTriggered = false;
+            sentences.Enqueue(sentence);
         }
-        OnDialogEnded?.Invoke();
-        DialogBox.visible = false;
+
+        DisplayNextSentence();
     }
 
-    public void SkipLine()
+    // For singular dialogue
+    public void StartDialogue(string[] dialogueArray, int startPos, string name)
     {
-        skipLineTriggered = true;
+        Main.Instance.InConversation();
+        DialogueName.text = name;
+        DialogBox.visible = true;
+        sentences.Clear();
+        sentences.Enqueue(dialogueArray[startPos]);
+
+        DisplayNextSentence();
     }
+
+    public void DisplayNextSentence()
+    {
+        if(sentences.Count == 0)
+        {
+            EndDialogue();
+            Main.Instance.EndConversation();
+            return;
+        }
+
+        string sentence = sentences.Dequeue();
+        DialogueText.text = sentence;
+    }
+
+    /*
+    public bool IsLastSentence()
+    {
+        
+    }
+    */
 
     public void EndDialogue()
     {

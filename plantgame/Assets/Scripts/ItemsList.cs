@@ -8,9 +8,9 @@ public class ItemsList
     {
         None,
         Fertilizer = 20,
-        Fly = 25,
-        MealWorm = 15,
-        EggShell = 10,
+        Fly = 15,
+        MealWorm = 10,
+        EggShell = 7,
         Steak = 25
 
     }
