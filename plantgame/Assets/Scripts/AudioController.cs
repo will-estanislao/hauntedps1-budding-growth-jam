@@ -8,23 +8,7 @@ public class AudioController : MonoBehaviour
     private AudioSource soundFX;
 
     [SerializeField]
-    public List<AudioClip> click;
-    [SerializeField]
-    public List<AudioClip> chomp;
-    [SerializeField]
-    public List<AudioClip> brush;
-    [SerializeField]
-    public List<AudioClip> water;
-    [SerializeField]
-    public List<AudioClip> reactionSoundsPurr;
-    [SerializeField]
-    public List<AudioClip> reactionSoundsYuck;
-    [SerializeField]
-    public List<AudioClip> reactionSoundsS3Yuck;
-    [SerializeField]
-    public List<AudioClip> reactionSoundsYippie;
-    [SerializeField]
-    public List<AudioClip> reactionSoundsS3Yippie;
+    private AudioAsset audioAsset;
 
     private AudioClip clipToPlay;
 
@@ -47,72 +31,77 @@ public class AudioController : MonoBehaviour
     void Start()
     {
         soundFX = GetComponent<AudioSource>();
-
-       // StartCoroutine(waitForSound(clipToPlay));
     }
 
     public void PlayEatFX()
     {
-        clipToPlay = RandomizeTrack(reactionSoundsYippie);
+        clipToPlay = RandomizeTrack(audioAsset.reactionSoundsYippie);
         soundFX.clip = clipToPlay;
         soundFX.Play();
     }
 
     public void PlayEatFX2()
     {
-        clipToPlay = RandomizeTrack(reactionSoundsS3Yippie);
+        clipToPlay = RandomizeTrack(audioAsset.reactionSoundsS3Yippie);
         soundFX.clip = clipToPlay;
         soundFX.Play();
     }
 
     public void PlayYuck()
     {
-        clipToPlay = RandomizeTrack(reactionSoundsYuck);
+        clipToPlay = RandomizeTrack(audioAsset.reactionsSoundsYuck);
         soundFX.clip = clipToPlay;
         soundFX.Play();
     }
 
     public void PlayYuck2()
     {
-        clipToPlay = RandomizeTrack(reactionSoundsS3Yuck);
+        clipToPlay = RandomizeTrack(audioAsset.reactionsSoundsS3Yuck);
         soundFX.clip = clipToPlay;
         soundFX.Play();
     }
 
     public void PlayPurr()
     {
-        clipToPlay = RandomizeTrack(reactionSoundsPurr);
+        clipToPlay = RandomizeTrack(audioAsset.reactionSoundsPurr);
         //soundFX.clip = clipToPlay;
         soundFX.PlayOneShot(clipToPlay, 0.10f);
     }
 
     public void PlayBrush()
     {
-        clipToPlay = RandomizeTrack(brush);
+        clipToPlay = RandomizeTrack(audioAsset.brush);
         //soundFX.clip = clipToPlay;
         soundFX.PlayOneShot(clipToPlay, .075f);
     }
 
     public void PlayClick()
     {
-        clipToPlay = RandomizeTrack(click);
+        clipToPlay = RandomizeTrack(audioAsset.click);
         soundFX.clip = clipToPlay;
         soundFX.Play();
     }
 
     public void PlayChomp()
     {
-        clipToPlay = RandomizeTrack(chomp);
+        clipToPlay = RandomizeTrack(audioAsset.chomp);
         soundFX.clip = clipToPlay;
         soundFX.Play();
     }
 
     public void PlayWater()
     {
-        clipToPlay = RandomizeTrack(water);
+        clipToPlay = RandomizeTrack(audioAsset.water);
         soundFX.clip = clipToPlay;
         //soundFX.PlayOneShot(clipToPlay, 0.75f);
         soundFX.loop = true;
+        soundFX.Play();
+    }
+
+    public void PlayLaugh()
+    {
+        clipToPlay = audioAsset.evilLaugh[0];
+        soundFX.clip = clipToPlay;
         soundFX.Play();
     }
 
@@ -161,6 +150,16 @@ public class AudioController : MonoBehaviour
         yield return new WaitForSeconds(1);
         PlayPurr();
         yield return new WaitForSeconds(1);
+    }
+
+    public IEnumerator PlayEndAudio()
+    {
+        PlayLaugh();
+        yield return new WaitWhile(() => soundFX.isPlaying);
+        clipToPlay = audioAsset.chomp[0];
+        soundFX.clip = clipToPlay;
+        soundFX.Play();
+        yield return new WaitWhile(() => soundFX.isPlaying);
     }
 
 
