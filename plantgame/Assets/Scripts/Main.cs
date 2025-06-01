@@ -103,11 +103,12 @@ public class Main : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
         gameUI = GameObject.Find("UI").GetComponent<UIController>();
         plantMode = currentPlant.GetComponent<PlantCreature>().petMode;
-
         plantDataSave.UpdateCurrentStats(currentPlant.GetComponent<PlantCreature>());
+
+        DialogueController.OnDialogStarted += InConversation;
+        DialogueController.OnDialogEnded += EndConversation;
 
         UIUpdates();    // Show current plant stats
         currentStage = plantDataSave.plantStage;
@@ -184,6 +185,11 @@ public class Main : MonoBehaviour
         gameUI.ResetUI();
     }
 
+    public void HideAllUI()
+    {
+        gameUI.HideAllUI();
+    }
+
     public void PlantTalk()
     {
         currentPlant.GetComponent<PlantCreature>().Talk();
@@ -241,7 +247,6 @@ public class Main : MonoBehaviour
         currentStage = plantDataSave.plantStage;
 
         ResetUI();
-
     }
 
     public IEnumerator EndGame()
@@ -280,19 +285,28 @@ public class Main : MonoBehaviour
         }
         else
         {
+            DialogueController.OnDialogStarted -= InConversation;
+            DialogueController.OnDialogEnded -= EndConversation;
             // Go to good end screen
         }
     }
 
     public void OnClick()
     {
-        if(Input.GetMouseButtonDown(0) && inConvo && gameEnd)
+        if(Input.GetMouseButtonDown(0) && inConvo)
         {
-            DialogueController.instance.DisplayNextSentence();
-        }
-        else if(Input.GetMouseButtonDown(0) && inConvo && !gameEnd)
-        {
-            ResetUI();
+            AudioController.Instance.PlayClick();
+            if (gameEnd)
+            {
+                DialogueController.instance.DisplayNextSentence();
+            }
+            else
+            {
+                
+                EndConversation();
+                Invoke(nameof(ResetUI), 0.95f);
+                
+            }
         }
     }
 

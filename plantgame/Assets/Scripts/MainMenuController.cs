@@ -55,6 +55,7 @@ public class MainMenuController : MonoBehaviour
     public void LoadGame(ClickEvent evnt)
     {
         mainMenu.visible = false;
+        mainMenu.SetEnabled(false);
         story.visible = true;
         // Load Game Scene
         

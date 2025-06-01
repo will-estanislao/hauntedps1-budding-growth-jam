@@ -223,11 +223,7 @@ public class PlantCreature : MonoBehaviour
     public void PlantEndGame()
     {
         // Dialogue & Play animation
-        if (Main.isGoodEnd)
-        {
-            DialogueController.instance.StartDialogue(plantDialog.goodEndDialogue, plantName);
-        }
-        else
+        if (!Main.isGoodEnd)
         {
             DialogueController.instance.StartDialogue(plantDialog.badEndDialogue, plantName);
         }
@@ -305,14 +301,16 @@ public class PlantCreature : MonoBehaviour
         ItemChoices foodItem = collision.gameObject.GetComponent<ItemChoices>();
         if (foodItem.itemType == 1)
         {
+            Main.Instance.HideAllUI();
+
             FeedPlant(foodItem);
 
             StartCoroutine(AudioController.Instance.PlayEatSound(isHappy, plantStage));
-            //StartCoroutine(AudioController.Instance.PlayEatSound2());
-            //AudioController.Instance.PlayChomp();
+
             Destroy(collision.gameObject);
+            
             // At the end of doing collision things, Trigger ui reset - event?
-            Main.Instance.Invoke("ResetUI", 1);
+            Main.Instance.Invoke("ResetUI", 3);
             //Main.Instance.ResetUI();
         }
 
