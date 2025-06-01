@@ -26,10 +26,6 @@ public class DialogueController: MonoBehaviour
 
     private Queue<string> sentences;
 
-    private int dialogeCount;
-
-    bool skipLineTriggered;
-
     private void Awake()
     {
         if(instance == null)
@@ -46,13 +42,11 @@ public class DialogueController: MonoBehaviour
 
     public void StartDialogue(string[] dialogueArray, string name)
     {
-        Main.Instance.InConversation();
+        OnDialogStarted?.Invoke();
         // When dialogue starts- evoke event in main that disables ui and focuses on click events to moving dialogue
         //Debug.Log("Current Convo: " + dialogue.badEndDialogue);
         DialogueName.text = name;
         DialogBox.visible = true;
-
-        
 
         sentences.Clear();
         // Plant responsible for what dialogue gets fed
@@ -67,7 +61,7 @@ public class DialogueController: MonoBehaviour
     // For singular dialogue
     public void StartDialogue(string[] dialogueArray, int startPos, string name)
     {
-        Main.Instance.InConversation();
+        OnDialogStarted?.Invoke();
         DialogueName.text = name;
         DialogBox.visible = true;
         sentences.Clear();
@@ -80,8 +74,8 @@ public class DialogueController: MonoBehaviour
     {
         if(sentences.Count == 0)
         {
+            OnDialogEnded?.Invoke();
             EndDialogue();
-            Main.Instance.EndConversation();
             return;
         }
 
