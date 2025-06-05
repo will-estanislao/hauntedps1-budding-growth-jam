@@ -6,34 +6,34 @@ using UnityEngine;
 public class AudioAsset : ScriptableObject
 {
     [SerializeField]
-    public List<AudioClip> click;
+    public AudioClip[] click;
 
     [SerializeField]
-    public List<AudioClip> chomp;
+    public AudioClip[] chomp;
 
     [SerializeField]
-    public List<AudioClip> brush;
+    public AudioClip[] brush;
 
     [SerializeField]
-    public List<AudioClip> water;
+    public AudioClip[] water;
 
     [SerializeField]
-    public List<AudioClip> reactionSoundsPurr;
+    public AudioClip[] reactionSoundsPurr;
 
     [SerializeField]
-    public List<AudioClip> reactionsSoundsYuck;
+    public AudioClip[] reactionsSoundsYuck;
 
     [SerializeField]
-    public List<AudioClip> reactionsSoundsS3Yuck;
+    public AudioClip[] reactionsSoundsS3Yuck;
 
     [SerializeField]
-    public List<AudioClip> reactionSoundsYippie;
+    public AudioClip[] reactionSoundsYippie;
 
     [SerializeField]
-    public List<AudioClip> reactionSoundsS3Yippie;
+    public AudioClip[] reactionSoundsS3Yippie;
 
     [SerializeField]
-    public List<AudioClip> evilLaugh;
+    public AudioClip[] evilLaugh;
 
 
 }

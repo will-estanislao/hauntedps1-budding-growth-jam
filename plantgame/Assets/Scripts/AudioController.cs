@@ -12,6 +12,29 @@ public class AudioController : MonoBehaviour
 
     private AudioClip clipToPlay;
 
+    public bool isItPlaying;
+
+    [SerializeField]
+    public List<AudioClip> laugh;
+    [SerializeField]
+    public List<AudioClip> water;
+    [SerializeField]
+    public List<AudioClip> chomp;
+    [SerializeField]
+    public List<AudioClip> yippie;
+    [SerializeField]
+    public List<AudioClip> yippieS3;
+    [SerializeField]
+    public List<AudioClip> yuck;
+    [SerializeField]
+    public List<AudioClip> yuckS3;
+    [SerializeField]
+    public List<AudioClip> brush;
+    [SerializeField]
+    public List<AudioClip> purr;
+    [SerializeField]
+    public List<AudioClip> click;
+
     public static AudioController Instance { get; private set; }
 
     // Array of Sound FX
@@ -25,6 +48,11 @@ public class AudioController : MonoBehaviour
         {
             Instance = this;
         }
+
+        isItPlaying = false;
+
+        //clipToPlay = null;
+        //soundFX.clip = null;
     }
 
     // Start is called before the first frame update
@@ -35,63 +63,63 @@ public class AudioController : MonoBehaviour
 
     public void PlayEatFX()
     {
-        clipToPlay = RandomizeTrack(audioAsset.reactionSoundsYippie);
+        clipToPlay = RandomizeTrack(yippie);
         soundFX.clip = clipToPlay;
         soundFX.Play();
     }
 
     public void PlayEatFX2()
     {
-        clipToPlay = RandomizeTrack(audioAsset.reactionSoundsS3Yippie);
+        clipToPlay = RandomizeTrack(yippieS3);
         soundFX.clip = clipToPlay;
         soundFX.Play();
     }
 
     public void PlayYuck()
     {
-        clipToPlay = RandomizeTrack(audioAsset.reactionsSoundsYuck);
+        clipToPlay = RandomizeTrack(yuck);
         soundFX.clip = clipToPlay;
         soundFX.Play();
     }
 
     public void PlayYuck2()
     {
-        clipToPlay = RandomizeTrack(audioAsset.reactionsSoundsS3Yuck);
+        clipToPlay = RandomizeTrack(yuckS3);
         soundFX.clip = clipToPlay;
         soundFX.Play();
     }
 
     public void PlayPurr()
     {
-        clipToPlay = RandomizeTrack(audioAsset.reactionSoundsPurr);
+        clipToPlay = RandomizeTrack(purr);
         //soundFX.clip = clipToPlay;
         soundFX.PlayOneShot(clipToPlay, 0.10f);
     }
 
     public void PlayBrush()
     {
-        clipToPlay = RandomizeTrack(audioAsset.brush);
+        clipToPlay = RandomizeTrack(brush);
         //soundFX.clip = clipToPlay;
         soundFX.PlayOneShot(clipToPlay, .075f);
     }
 
     public void PlayClick()
     {
-        clipToPlay = RandomizeTrack(audioAsset.click);
+        clipToPlay = RandomizeTrack(click);
         soundFX.clip = clipToPlay;
         soundFX.Play();
     }
 
     public void PlayChomp()
     {
-        clipToPlay = RandomizeTrack(audioAsset.chomp);
+        clipToPlay = RandomizeTrack(chomp);
         soundFX.clip = clipToPlay;
         soundFX.Play();
     }
 
     public void PlayWater()
     {
-        clipToPlay = RandomizeTrack(audioAsset.water);
+        clipToPlay = RandomizeTrack(water);
         soundFX.clip = clipToPlay;
         //soundFX.PlayOneShot(clipToPlay, 0.75f);
         soundFX.loop = true;
@@ -100,9 +128,10 @@ public class AudioController : MonoBehaviour
 
     public void PlayLaugh()
     {
-        clipToPlay = audioAsset.evilLaugh[0];
+        clipToPlay = laugh[0];
         soundFX.clip = clipToPlay;
         soundFX.Play();
+        //soundFX.PlayOneShot(clipToPlay);
     }
 
     public void StopPlay()
@@ -154,12 +183,37 @@ public class AudioController : MonoBehaviour
 
     public IEnumerator PlayEndAudio()
     {
+        Debug.Log("I'm in Audio");
         PlayLaugh();
-        yield return new WaitWhile(() => soundFX.isPlaying);
-        clipToPlay = audioAsset.chomp[0];
-        soundFX.clip = clipToPlay;
-        soundFX.Play();
-        yield return new WaitWhile(() => soundFX.isPlaying);
+        //yield return new WaitForSeconds(1);
+        yield return new WaitForSeconds(6);
+
+        //yield return new WaitWhile(() => soundFX.isPlaying);
+
+        //soundFX.clip = chomp;
+        PlayChomp();
+        //yield return new WaitForSeconds(1);
+        yield return new WaitForSeconds(1);
+        //soundFX.PlayOneShot(clipToPlay);
+        //yield return new WaitWhile(() => soundFX.isPlaying);
+    }
+
+    public void ClearAudio()
+    {
+        clipToPlay = null;
+        soundFX.clip = null;
+    }
+
+    public bool IsItPlaying()
+    {
+        if(soundFX.isPlaying)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 
 
