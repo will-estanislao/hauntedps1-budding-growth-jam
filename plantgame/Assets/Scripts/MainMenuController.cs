@@ -27,12 +27,7 @@ public class MainMenuController : MonoBehaviour
         exit = credits.Q<Button>(name: "exit");
 
         mainMenuButtons = mainMenu.Query<Button>(className: "menu-btn").ToList();
-        
 
-    }
-
-    private void Start()
-    {
         mainMenuButtons[0].RegisterCallback<ClickEvent>(LoadGame);
         mainMenuButtons[1].RegisterCallback<ClickEvent>(QuitGame);
         mainMenuButtons[2].RegisterCallback<ClickEvent>(ShowCredits);
@@ -41,7 +36,11 @@ public class MainMenuController : MonoBehaviour
         credits.visible = false;
 
 
-        
+    }
+
+    private void Start()
+    {
+        StopAllCoroutines();
     }
 
     private void OnDisable()
@@ -57,8 +56,6 @@ public class MainMenuController : MonoBehaviour
         mainMenu.visible = false;
         mainMenu.SetEnabled(false);
         story.visible = true;
-        // Load Game Scene
-        
     }
 
     public void OnClickStory(ClickEvent evnt)

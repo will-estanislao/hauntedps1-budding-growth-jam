@@ -51,7 +51,6 @@ public class PlantCreature : MonoBehaviour
     [SerializeField]
     public DialogueAsset plantDialog;
     int startPos;
-    bool inConversation;
     bool isHappy;
 
     // State? - In feed mode/Water mode/Light mode - disable controls to only focus on this so those modes can be the same
@@ -81,16 +80,16 @@ public class PlantCreature : MonoBehaviour
 
         if(IsStatZero())
         {
-            if(plantStage < 3)
+            if (plantStage < 3)
             {
-                animator.SetTrigger("isDead");
-                Main.Instance.GameOver();
+                Main.Instance.GameOverSetUp();
+                PlayPlantAnimation("isEnd");
+                Main.Instance.Invoke("GameOver", 7);
             }
             else if (plantStage == 3)
             {
                 StartCoroutine(Main.Instance.EndGame());
             }
-            
         }
 
     }
@@ -210,7 +209,7 @@ public class PlantCreature : MonoBehaviour
 
     public bool IsStatZero()
     {
-        if (water == 0.0f || hunger == 0.0f)
+        if (water < 1.0f || hunger < 1.0f)
         {
             return true;
         }
@@ -242,34 +241,37 @@ public class PlantCreature : MonoBehaviour
         // Dry - Water Stat in 40% - 60%
         // Wilting - Water Stat in <40%
         // Dying - All stats are below 25%
-        if (hunger >= 40.0f && hunger < 65.0f && water >= 40.0f && water < 65.0f && affection < 65.0f && affection >= 40.0f)
-        {
-            plantStatus = ItemsList.PlantStatus.Neutral;
-            startPos = 3;
-        }
-        else if (hunger >= 65.0f && water >= 65.0f && affection >= 65.0f)
-        {
-            plantStatus = ItemsList.PlantStatus.Happy;
-            startPos = 4;
-        }
 
-        if (water > affection && hunger > affection && affection < 40.0f)
+        float average = (water + hunger + affection) / 3;
+
+        if (water > affection && hunger > affection && affection < 50.0f)
         {
             plantStatus = ItemsList.PlantStatus.Sad;
             startPos = 2;
         }
-        else if (water < affection && water < hunger && water < 40.0f)
+        else if (water < affection && water < hunger && water < 50.0f)
         {
             plantStatus = ItemsList.PlantStatus.Dry;
             startPos = 1;
         }
-        else if (hunger < water && hunger < affection && hunger < 40.0f)
+        else if (hunger < water && hunger < affection && hunger < 50.0f)
         {
             plantStatus = ItemsList.PlantStatus.Wilting;
             startPos = 0;
         }
 
-        if (hunger <= 25.0f && water <= 25.0f && affection <= 25.0f)
+        if (average >= 50 && average < 65)
+        {
+            plantStatus = ItemsList.PlantStatus.Neutral;
+            startPos = 3;
+        }
+        else if (average >= 65)
+        {
+            plantStatus = ItemsList.PlantStatus.Happy;
+            startPos = 4;
+        }
+
+        if (average <= 25)
         {
             plantStatus = ItemsList.PlantStatus.Dying;
             startPos = 5;
@@ -287,6 +289,13 @@ public class PlantCreature : MonoBehaviour
         plantStatus = prevPlantData.plantStatus;
         currentMode = prevPlantData.plantLight;
 
+    }
+
+    public void RandomizeStartStats()
+    {
+        water = Random.Range(10.0f,35.0f);
+        hunger = Random.Range(10.0f,35.0f);
+        affection = Random.Range(10.0f,35.0f);
     }
     #endregion
 
@@ -324,6 +333,8 @@ public class PlantCreature : MonoBehaviour
     {
         if (collision.gameObject.GetComponent<ItemChoices>().itemType == 2)
         {
+            //AudioController.Instance.PlayWater();
+
             WaterPlant();
 
             Debug.Log("I'm getting watered!");

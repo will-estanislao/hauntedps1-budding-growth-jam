@@ -104,6 +104,7 @@ public class Main : MonoBehaviour
     void Start()
     {
         gameUI = GameObject.Find("UI").GetComponent<UIController>();
+        currentPlant.GetComponent<PlantCreature>().RandomizeStartStats();
         plantMode = currentPlant.GetComponent<PlantCreature>().petMode;
         plantDataSave.UpdateCurrentStats(currentPlant.GetComponent<PlantCreature>());
 
@@ -125,7 +126,7 @@ public class Main : MonoBehaviour
         mousePos = currentCam.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, CAMDISTANCE));
         rayCast = currentCam.ScreenPointToRay(Input.mousePosition);
 
-        if(!gameEnd)
+        if (!gameEnd)
         {
             if (Input.GetMouseButton(0) && currentItem != null)
             {
@@ -155,6 +156,12 @@ public class Main : MonoBehaviour
                 plantDataSave.UpdateCurrentStats(currentPlant.GetComponent<PlantCreature>());
                 UIUpdates();
             }
+
+            if(plantDataSave.plantStatus == ItemsList.PlantStatus.Neutral || plantDataSave.plantStatus == ItemsList.PlantStatus.Happy)
+            {
+                gameUI.EnableNextDay();
+            }
+            
         }
 
         OnClick();
@@ -211,9 +218,18 @@ public class Main : MonoBehaviour
         inConvo = false;
     }
 
+    public void UnregisterEvents()
+    {
+        spawnObject -= SpawnObject;
+        resetMainUI -= ResetUI;
+        resetMainUI -= UIUpdates;
+        despawnObject -= DespawnObject;
+        switchState -= ChangeMode;
+        lightState -= ChangeLight;
+    }
     public void SetUpNewStage()
     {
-        
+        gameUI.DisableNextDay();
         // Save the current plants data
         plantDataSave.UpdateCurrentStats(currentPlant.GetComponent<PlantCreature>());
         endStatus.Add(plantDataSave.plantStatus);
@@ -251,9 +267,9 @@ public class Main : MonoBehaviour
 
     public IEnumerator EndGame()
     {
+        GameOverSetUp();
         plantDataSave.UpdateCurrentStats(currentPlant.GetComponent<PlantCreature>());
         endStatus.Add(plantDataSave.plantStatus);
-        gameEnd = true;
 
         int endGameCount = 0;
         // Check on whether its good end
@@ -270,24 +286,27 @@ public class Main : MonoBehaviour
             isGoodEnd = true;
         }
 
-        currentPlant.GetComponent<PlantCreature>().PlantEndGame();
-        yield return new WaitUntil(() => !inConvo);
+        UnregisterEvents(); //REMEMBER TO UNREGISTER YOUR EVENTS!!!
+        gameUI.enabled = true;
 
         // load new screen
         Debug.Log("GameEnd");
         if(!isGoodEnd)
         {
+            currentPlant.GetComponent<PlantCreature>().PlantEndGame();
+            yield return new WaitUntil(() => !inConvo);
             // Animation play - make sure it ends before
             currentPlant.GetComponent<PlantCreature>().animator.SetTrigger("isEnd");
-            yield return new WaitForSeconds(5);
+            yield return new WaitForSeconds(4);
+            gameUI.HideScreen();
+            yield return new WaitForSeconds(1);
             GameOver();
             //Invoke(nameof(GameOver), 2);
         }
         else
         {
-            DialogueController.OnDialogStarted -= InConversation;
-            DialogueController.OnDialogEnded -= EndConversation;
-            // Go to good end screen
+            gameUI.HideScreen();
+            SceneManager.LoadScene(3);
         }
     }
 
@@ -312,12 +331,16 @@ public class Main : MonoBehaviour
 
     public void GameOver()
     {
-        gameUI.HideAllUI();
-
         StopAllCoroutines();
         
         // game over screen
         SceneManager.LoadScene(2);
+    }
+
+    public void GameOverSetUp()
+    {
+        gameEnd = true;
+        HideAllUI();
     }
 
     private void SpawnObject(int itemType, ItemsList.FoodItems foodType)

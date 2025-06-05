@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -18,6 +19,7 @@ public class GoodEndGame : MonoBehaviour
 
     private bool isEnd;
 
+
     private void Awake()
     {
         doc = GetComponent<UIDocument>();
@@ -28,6 +30,7 @@ public class GoodEndGame : MonoBehaviour
 
     private void Start()
     {
+        StopAllCoroutines();
         // Dialog box
         DialogueController.instance.DialogBox = dialog;
         DialogueController.instance.DialogueName = DialogueController.instance.DialogBox.Q<Label>(name: "name");
@@ -38,7 +41,23 @@ public class GoodEndGame : MonoBehaviour
 
     private void Update()
     {
+        if (endDialogue.dialogue.Length - 1 <= dialoguePos)
+        {
+            if(!AudioController.Instance.IsItPlaying() && !AudioController.Instance.isItPlaying)
+            {
+                StartCoroutine(AudioController.Instance.PlayEndAudio());
+                //AudioController.Instance.PlayEndAudio2();
+                AudioController.Instance.isItPlaying = true;
+            }
+
+            StartCoroutine(EndGame());
+            
+        }
+        else
+        {
             OnClick();
+        }
+        
     }
 
     public void DialogueNext()
@@ -59,31 +78,39 @@ public class GoodEndGame : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0))
         {
-            if (endDialogue.dialogue.Length - 1 <= dialoguePos)
-            {
-                
-                screen.visible = false;
-                StartCoroutine(AudioController.Instance.PlayEndAudio());
-                // Then fade
-                StartCoroutine(EndGame());
-            }
-            else
-            {
-                DialogueNext();
-            }
-            
+
+            DialogueNext();
+
         }
     }
 
     public IEnumerator EndGame()
     {
-        StopCoroutine(AudioController.Instance.PlayEndAudio());
-        screen.AddToClassList("fade-in");
-        yield return new WaitForSeconds(15);
+        screen.AddToClassList(className: "screenFadeOut");
+        yield return new WaitForSeconds(4);
 
+        //yield return StartCoroutine(AudioController.Instance.PlayEndAudio());
+        DialogueController.instance.EndDialogue();
+        yield return new WaitForSeconds(2);
 
-        //SceneManager.LoadScene(0);
+        screen.RemoveFromClassList(className: "screenFadeOut");
+        yield return new WaitForSeconds(5);
+
+        SceneManager.LoadScene(0);
 
     }
-   
+
+    #region Animations
+    public void FadeIn()
+    {
+        screen.AddToClassList(className: "fade-in");
+    }
+
+    public void FadeOut()
+    {
+        screen.RemoveFromClassList(className: "fade-in");
+        screen.AddToClassList(className: "fade-out");
+    }
+    #endregion
+
 }

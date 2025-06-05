@@ -25,21 +25,21 @@ public class PlantData : ScriptableObject
         // Make sure to never go lower than 10
         if(plantStatus == ItemsList.PlantStatus.Happy)
         {
-            water = Mathf.Clamp((water * 0.65f) - 2.0f, MINSTAT, MAXSTAT);
-            hunger = Mathf.Clamp((hunger * 0.65f) - 2.0f, MINSTAT, MAXSTAT);
-            affection = Mathf.Clamp((affection * 0.65f) - 2.0f, MINSTAT, MAXSTAT);
+            water = Mathf.Clamp((water * 0.65f) - 5.0f, MINSTAT, MAXSTAT);
+            hunger = Mathf.Clamp((hunger * 0.65f) - 5.0f, MINSTAT, MAXSTAT);
+            affection = Mathf.Clamp((affection * 0.65f) - 5.0f, MINSTAT, MAXSTAT);
         }
         else if (plantStatus == ItemsList.PlantStatus.Dying)
         {
-            water = Mathf.Clamp((water * 0.45f) - 5.0f, 0.0f, MAXSTAT);
-            hunger = Mathf.Clamp((hunger * 0.45f) - 5.0f, 0.0f, MAXSTAT);
-            affection = Mathf.Clamp((affection * 0.45f) - 5.0f, 0.0f, MAXSTAT);
+            water = Mathf.Clamp((water * 0.45f) - 7.0f, 0.0f, MAXSTAT);
+            hunger = Mathf.Clamp((hunger * 0.45f) - 7.0f, 0.0f, MAXSTAT);
+            affection = Mathf.Clamp((affection * 0.45f) - 7.0f, 0.0f, MAXSTAT);
         }
         else
         {
-            water = Mathf.Clamp((water * 0.5f) - 7.0f, 0.0f, MAXSTAT);
-            hunger = Mathf.Clamp((hunger * 0.5f) - 7.0f, 0.0f, MAXSTAT);
-            affection = Mathf.Clamp((affection * 0.5f) - 7.0f, 0.0f, MAXSTAT);
+            water = Mathf.Clamp((water * 0.5f) - 8.0f, 0.0f, MAXSTAT);
+            hunger = Mathf.Clamp((hunger * 0.5f) - 8.0f, 0.0f, MAXSTAT);
+            affection = Mathf.Clamp((affection * 0.5f) - 8.0f, 0.0f, MAXSTAT);
         }
         
         plantStage++;
@@ -57,7 +57,5 @@ public class PlantData : ScriptableObject
         plantStage = currentPlant.PlantStage;
         plantStatus = currentPlant.PlantStatus;
         plantLight = currentPlant.CurrentMode;
-
-
     }
 }

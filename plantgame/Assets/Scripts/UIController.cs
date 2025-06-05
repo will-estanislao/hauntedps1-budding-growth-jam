@@ -27,13 +27,13 @@ public class UIController : MonoBehaviour
     private VisualElement lightMenu;
 
     private Label infoTxt;
+    private Label title;
 
     private Button meatButton;
     private Button wormBtn;
     private Button eggBtn;
     private Button fertilizerBtn;
     private Button flyBtn;
-    private Button petBtn;
     private Button exitButton;
     private Button lowLightBtn;
     private Button medLightBtn;
@@ -49,68 +49,53 @@ public class UIController : MonoBehaviour
 
     private void Awake()
     {
-
+        // Get ui elements on screen
         _document = GetComponent<UIDocument>();
         exitButton = _document.rootVisualElement.Q<Button>(name: "exitBtn");
-
         subMenu = _document.rootVisualElement.Q(name: "SubMenu");
         mainMenu = _document.rootVisualElement.Q(name: "main");
         debugMenu = _document.rootVisualElement.Q(name: "DebugUI");
         nextDay = _document.rootVisualElement.Q(name: "nextDay");
-
         foodMenu = subMenu.Q<VisualElement>(name: "FoodMenu");
         lightMenu = subMenu.Q<VisualElement>(name: "LightMenu");
+        title = nextDay.Q<Label>(name: "titleCard");
 
         meatButton = foodMenu.Q<Button>("Steak");
         wormBtn = foodMenu.Q<Button>("Mealworm");
         flyBtn = foodMenu.Q<Button>("Fly");
         fertilizerBtn = foodMenu.Q<Button>("Fertilizer");
         eggBtn = foodMenu.Q<Button>("Eggshell");
-        meatButton.RegisterCallback<ClickEvent, ItemsList.FoodItems>(SpawnFood, ItemsList.FoodItems.Steak);
-        wormBtn.RegisterCallback<ClickEvent, ItemsList.FoodItems>(SpawnFood, ItemsList.FoodItems.MealWorm);
-        flyBtn.RegisterCallback<ClickEvent, ItemsList.FoodItems>(SpawnFood, ItemsList.FoodItems.Fly);
-        eggBtn.RegisterCallback<ClickEvent, ItemsList.FoodItems>(SpawnFood, ItemsList.FoodItems.EggShell);
-        fertilizerBtn.RegisterCallback<ClickEvent, ItemsList.FoodItems>(SpawnFood, ItemsList.FoodItems.Fertilizer);
-        petBtn = mainMenu.Q<Button>("petButton");
+        // Assign events to food buttons
+
+        meatButton.clickable.clickedWithEventInfo += Spawn;
+        wormBtn.clickable.clickedWithEventInfo += Spawn;
+        flyBtn.clickable.clickedWithEventInfo += Spawn;
+        eggBtn.clickable.clickedWithEventInfo += Spawn;
+        fertilizerBtn.clickable.clickedWithEventInfo += Spawn;
+
 
         lowLightBtn = lightMenu.Q<Button>("Low");
         medLightBtn = lightMenu.Q<Button>("Med");
         highLightBtn = lightMenu.Q<Button>("High");
 
-        // Hide foodmenu until feed is clicked
-        subMenu.visible = false;
-        exitButton.visible = false;
-
-        // Get the heirarchy of the ui element within ex: trying to get button
-        _button = _document.rootVisualElement.Q("feedButton") as Button;
-
-        _button.RegisterCallback<ClickEvent>(OnFeedClick);
-
-        exitButton.RegisterCallback<ClickEvent>(OnExit);
-        exitButton.RegisterCallback<ClickEvent>(OnAllButtonsClicked);
-
-        petBtn.RegisterCallback<ClickEvent>(OnPet);
+        exitButton.clickable.clicked += OnExit;
 
         _careMenuButtons = mainMenu.Query<Button>(className: "care-menu-btn").ToList();
-        for (int i = 0; i < _careMenuButtons.Count; i++)
-        {
-            _careMenuButtons[i].RegisterCallback<ClickEvent>(OnAllButtonsClicked);
-            Debug.Log(_careMenuButtons[i].name);
-        }
+        _careMenuButtons[0].clickable.clicked += OnFeedClick;
+        _careMenuButtons[1].clickable.clicked += OnWatering;
+        _careMenuButtons[2].clickable.clicked += OnPet;
+        _careMenuButtons[3].clickable.clicked += OnLight;
+        _careMenuButtons[4].clickable.clicked += OnTalk;
+        _careMenuButtons[5].clickable.clicked += OnNextDay;
 
-        _careMenuButtons[1].RegisterCallback<ClickEvent>(OnWatering);
-        _careMenuButtons[3].RegisterCallback<ClickEvent>(OnLight);
-        _careMenuButtons[4].RegisterCallback<ClickEvent>(OnTalk);
-        _careMenuButtons[5].RegisterCallback<ClickEvent>(OnNextDay);
-
-        lowLightBtn.RegisterCallback<ClickEvent, ItemsList.LightMode>(SetLight, ItemsList.LightMode.Low);
-        medLightBtn.RegisterCallback<ClickEvent, ItemsList.LightMode>(SetLight, ItemsList.LightMode.Medium);
-        highLightBtn.RegisterCallback<ClickEvent, ItemsList.LightMode>(SetLight, ItemsList.LightMode.High);
+        lowLightBtn.clickable.clickedWithEventInfo += SetLight;
+        medLightBtn.clickable.clickedWithEventInfo += SetLight;
+        highLightBtn.clickable.clickedWithEventInfo += SetLight;
 
         allButtons = _document.rootVisualElement.Query<Button>(className: "unity-button").ToList();
-        for (int i = 0; i < allButtons.Count; i++)
+        foreach (Button btn in allButtons)
         {
-            allButtons[i].RegisterCallback<ClickEvent>(OnAllButtonsClicked);
+            btn.clickable.clicked += OnAllButtonsClicked;
         }
 
         infoTxt = mainMenu.Q<Label>(name: "info");
@@ -118,7 +103,12 @@ public class UIController : MonoBehaviour
 
     public void Start()
     {
-        mainMenu.SetEnabled(true);
+        // Hide specific ui elements
+        subMenu.visible = false;
+        exitButton.visible = false;
+
+        DisableNextDay();
+
         // Dialog box
         DialogueController.instance.DialogBox = _document.rootVisualElement.Q(name: "dialogBox");
         DialogueController.instance.DialogueName = DialogueController.instance.DialogBox.Q<Label>(name: "name");
@@ -129,41 +119,47 @@ public class UIController : MonoBehaviour
         Debug.Log(mainMenu);
     }
 
+    private void OnDisable()
+    {
+        _careMenuButtons[0].clickable.clicked -= OnFeedClick;
+        _careMenuButtons[1].clickable.clicked -= OnWatering;
+        _careMenuButtons[2].clickable.clicked -= OnPet;
+        _careMenuButtons[3].clickable.clicked -= OnLight;
+        _careMenuButtons[4].clickable.clicked -= OnTalk;
+        _careMenuButtons[5].clickable.clicked -= OnNextDay;
+        
+        foreach (Button btn in allButtons)
+        {
+            btn.clickable.clicked -= OnAllButtonsClicked;
+        }
+        
+
+        lowLightBtn.clickable.clickedWithEventInfo -= SetLight;
+        medLightBtn.clickable.clickedWithEventInfo -= SetLight;
+        highLightBtn.clickable.clickedWithEventInfo -= SetLight;
+
+        meatButton.clickable.clickedWithEventInfo -= Spawn;
+        wormBtn.clickable.clickedWithEventInfo -= Spawn;
+        flyBtn.clickable.clickedWithEventInfo -= Spawn;
+        eggBtn.clickable.clickedWithEventInfo -= Spawn;
+        fertilizerBtn.clickable.clickedWithEventInfo -= Spawn;
+
+        exitButton.clickable.clicked -= OnExit;
+    }
+
+
     public void OnUIUpdate(string info)
     {
         // Update Debug Menu
-        debugMenu.Q<Label>(name: "plantStats").text = "Plant Stats:\n" + info;
-        infoTxt.text = "Day: " + Main.currentDay + " Stage: " + Main.Instance.plantDataSave.plantStage;
+        DebugMenuUpdate(info);
+        infoTxt.text = "Day: " + Main.currentDay + " Stage: " + Main.Instance.plantDataSave.plantStage + " Light Mode: " + Main.Instance.plantDataSave.plantLight;
 
     }
 
-    private void OnDisable()
+    private void OnNextDay( )
     {
-        //_button.UnregisterCallback<ClickEvent>(OnFeedClick);
-        //meatButton.UnregisterCallback<ClickEvent, ItemsList>(SpawnFood);
-        //wormBtn.UnregisterCallback<ClickEvent>(SpawnFood);
-
-        //exitButton.UnregisterCallback<ClickEvent>(OnExit);
-        //petBtn.UnregisterCallback<ClickEvent>(OnPet);
-
-        for (int i = 0; i < _careMenuButtons.Count; i++)
-        {
-            //_careMenuButtons[i].UnregisterCallback<ClickEvent>(OnAllButtonsClicked);
-            //allButtons[i].RegisterCallback<ClickEvent>(OnAllButtonsClicked);
-        }
-
-        //_careMenuButtons[3].UnregisterCallback<ClickEvent>(OnLight);
-
-        //lowLightBtn.UnregisterCallback<ClickEvent, ItemsList.LightMode>(SetLight);
-        //medLightBtn.UnregisterCallback<ClickEvent, ItemsList.LightMode>(SetLight);
-        //highLightBtn.UnregisterCallback<ClickEvent, ItemsList.LightMode>(SetLight);
-    }
-
-    private void OnNextDay(ClickEvent evnt)
-    {
-        nextDay.visible = true;
         mainMenu.SetEnabled(false);
-        //Main.Instance.SetUpNewStage();
+        nextDay.visible = true;
         if(Main.Instance.plantDataSave.plantStage == 3)
         {
             Invoke(nameof(OnEndGame), 2);
@@ -176,16 +172,13 @@ public class UIController : MonoBehaviour
 
     private void OnEndGame()
     {
-
         mainMenu.visible = false;
         nextDay.visible = false;
-        mainMenu.SetEnabled(false);
         StartCoroutine(Main.Instance.EndGame());
     }
 
-    private void OnExit(ClickEvent evnt)
+    private void OnExit()
     {
-        exitButton.SetEnabled(false);
         Debug.Log("Exit Button was pressed");
         // Despawn Object
         Main.despawnObject?.Invoke();
@@ -199,97 +192,140 @@ public class UIController : MonoBehaviour
 
         exitButton.visible = false;
 
+        AudioController.Instance.StopPlay();
         ResetUI();
     }
 
     // Dont use event, its keyword
-    private void OnFeedClick(ClickEvent evnt)
+    private void OnFeedClick()
     {
         Debug.Log("Food Clicked!");
-
+        mainMenu.SetEnabled(false);
+        foodMenu.SetEnabled(true);
+        exitButton.SetEnabled(true);
         foodMenu.visible = true;
         exitButton.visible = true;
         mainMenu.visible = false;
 
-        subMenu.SetEnabled(true);
-        mainMenu.SetEnabled(false);
-        exitButton.SetEnabled(true);
-
     }
 
-    public void SpawnFood(ClickEvent evnt, ItemsList.FoodItems food)
+    public void Spawn(EventBase evnt)
     {
-        Debug.Log("Target:" + evnt.currentTarget);
+        Button button = (Button)evnt.target;
+        ItemsList.FoodItems food = ItemsList.FoodItems.Steak;
+
+        if (button.name == "Steak")
+        {
+            food = ItemsList.FoodItems.Steak;
+        }
+        else if (button.name == "Mealworm")
+        {
+            food = ItemsList.FoodItems.MealWorm;
+        }
+        else if (button.name == "Fertilizer")
+        {
+            food = ItemsList.FoodItems.Fertilizer;
+        }
+        else if (button.name == "Eggshell")
+        {
+            food = ItemsList.FoodItems.EggShell;
+        }
+        else if (button.name == "Fly")
+        {
+            food = ItemsList.FoodItems.Fly;
+        }
 
         Main.spawnObject?.Invoke(1, food);
 
         foodMenu.visible = false;
-        subMenu.SetEnabled(false);
+        foodMenu.SetEnabled(false);
+        // components we need- which button was pressed
+        // to determine which food to spawn
 
     }
 
-    private void OnWatering(ClickEvent evnt)
+    private void OnWatering()
     {
-
+        mainMenu.SetEnabled(false);
+        exitButton.SetEnabled(true);
         mainMenu.visible = false;
         exitButton.visible = true;
 
-        mainMenu.SetEnabled(false);
-        exitButton.SetEnabled(true);
-
         // Spawn item in
         Main.spawnObject(2, ItemsList.FoodItems.None);
-
     }
 
-    private void OnLight(ClickEvent evnt)
+    private void OnLight()
     {
         // Bring up a light settings menu
         // Low, Mid, High
         // These just affect stat- specifically water and food increase/decrease
+        mainMenu.SetEnabled(false);
+        lightMenu.SetEnabled(true);
+        exitButton.SetEnabled(true);
         mainMenu.visible = false;
         exitButton.visible = true;
         lightMenu.visible = true;
-
-        mainMenu.SetEnabled(false);
-        exitButton.SetEnabled(true);
-        subMenu.SetEnabled(true);
     }
 
-    private void SetLight(ClickEvent evnt, ItemsList.LightMode lightChoice)
+    private void SetLight(EventBase evnt)
     {
+        Button button = (Button)evnt.target;
+        ItemsList.LightMode lightChoice = ItemsList.LightMode.Medium;
+
+        if (button.name == "Low")
+        {
+            lightChoice = ItemsList.LightMode.Low;
+        }
+        else if (button.name == "Med")
+        {
+            lightChoice = ItemsList.LightMode.Medium;
+        }
+        else if (button.name == "High")
+        {
+            lightChoice = ItemsList.LightMode.High;
+        }
+
         Main.lightState?.Invoke(lightChoice);
 
         lightMenu.visible = false;
-        subMenu.SetEnabled(false);
+        lightMenu.SetEnabled(false);
     }
 
-    private void OnPet(ClickEvent evnt)
+    private void OnPet()
     {
-        mainMenu.visible = false;
-        exitButton.visible = true;
-
         mainMenu.SetEnabled(false);
         exitButton.SetEnabled(true);
+        mainMenu.visible = false;
+        exitButton.visible = true;
 
         UnityEngine.Cursor.SetCursor(mouseCursor, Vector2.zero, CursorMode.Auto);
 
         Main.switchState?.Invoke();
     }
 
-    private void OnTalk(ClickEvent evnt)
+    private void OnTalk( )
     {
-        mainMenu.visible = false;
         mainMenu.SetEnabled(false);
+        mainMenu.visible = false;
         Main.Instance.PlantTalk();
-        
     }
 
     // Assign everything here that applies to all buttons
-    private void OnAllButtonsClicked(ClickEvent click)
+    private void OnAllButtonsClicked()
     {
         Debug.Log("Button Click was successful\n Button Assignment was a success");
         AudioController.Instance.PlayClick();
+    }
+
+    public void EnableNextDay()
+    {
+        _careMenuButtons[5].SetEnabled(true);
+    }
+
+    public void DisableNextDay()
+    {
+        _careMenuButtons[5].SetEnabled(false);
     }
 
     public void ResetUI()
@@ -297,12 +333,14 @@ public class UIController : MonoBehaviour
         mainMenu.visible = true;
         exitButton.visible = false;
         nextDay.visible = false;
+        foodMenu.visible = false;
+        lightMenu.visible = false;
         subMenu.visible = false;
         DialogueController.instance.DialogBox.visible = false;
 
         mainMenu.SetEnabled(true);
-        subMenu.SetEnabled(false);
         exitButton.SetEnabled(false);
+        
     }
 
     public void HideAllUI()
@@ -311,18 +349,17 @@ public class UIController : MonoBehaviour
         exitButton.visible = false;
         nextDay.visible = false;
         subMenu.visible = false;
-
-        // Disable Buttons
-        mainMenu.SetEnabled(false);
-        subMenu.SetEnabled(false);
-        exitButton.SetEnabled(false);
-
     }
 
-    private void DebugMenuUpdate()
+    public void HideScreen()
     {
-        //string plantStatus = "Plant Stats:\n Name: " + ;
-
-        //debugMenu.Q<Label>(name: "plantStats").text = plantStatus;
+        title.visible = false;
+        nextDay.visible = true;
     }
+
+    private void DebugMenuUpdate(string info)
+    {
+        debugMenu.Q<Label>(name: "plantStats").text = "Plant Stats:\n" + info;
+    }
+
 }

@@ -45,6 +45,7 @@ public class ItemChoices : MonoBehaviour
         isDragging = true;
         //objRigidbody.gravityScale = 0;
         objRigidbody.useGravity = false;
+
     }
 
     private void OnMouseUp()
